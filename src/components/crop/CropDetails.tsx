@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { Leaf, Tag, X } from 'lucide-react'
 import { useEffect } from 'react'
 
 import { cropPlaceholderImage } from '../../data/imageSources'
@@ -14,15 +14,16 @@ interface CropDetailsProps {
 export function CropDetails({ crop, onClose }: CropDetailsProps) {
   useEffect(() => {
     if (!crop) return
-
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
+      if (event.key === 'Escape') onClose()
     }
-
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', handleEscape)
-    return () => window.removeEventListener('keydown', handleEscape)
+    return () => {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', handleEscape)
+    }
   }, [crop, onClose])
 
   if (!crop) return null
@@ -33,74 +34,118 @@ export function CropDetails({ crop, onClose }: CropDetailsProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 p-4 backdrop-blur-sm sm:items-center"
       onClick={onClose}
       role="presentation"
     >
       <div
-        className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+        className="animate-scale-in w-full max-w-2xl overflow-hidden rounded-4xl bg-white shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="crop-details-title"
-        onClick={(event) => event.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-slate-200 p-5">
-          <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-emerald-700">Crop profile</p>
-            <h2 id="crop-details-title" className="mt-2 text-2xl font-semibold text-slate-900">
-              {crop.name}
-            </h2>
-          </div>
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close crop details">
+        {/* Hero image with overlay */}
+        <div className="relative">
+          <img
+            src={imageSrc}
+            alt={imageAlt}
+            className="h-56 w-full object-cover"
+            onError={(e) => {
+              e.currentTarget.onerror = null
+              e.currentTarget.src = cropPlaceholderImage
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent" />
+
+          {/* Close button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            aria-label="Close crop details"
+            className="absolute right-4 top-4 rounded-full border border-white/20 bg-black/25 text-white backdrop-blur-sm hover:bg-black/40"
+          >
             <X className="h-4 w-4" />
           </Button>
+
+          {/* Name on image */}
+          <div className="absolute bottom-0 left-0 p-5 text-white">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-200">
+              Crop profile
+            </p>
+            <h2 id="crop-details-title" className="mt-1 text-2xl font-extrabold tracking-tight">
+              {crop.name}
+            </h2>
+            {(crop as any).scientificName && (
+              <p className="mt-1 text-sm italic text-white/60">{(crop as any).scientificName}</p>
+            )}
+          </div>
+
+          {/* Attribution */}
+          {imageData?.sourceUrl && (
+            <div className="absolute bottom-0 right-0 bg-black/35 px-2 py-1 text-[10px] text-white/70">
+              <a href={imageData.sourceUrl} target="_blank" rel="noreferrer" className="hover:text-white">
+                © {imageData.attribution}
+              </a>
+              {imageData.license && <span> · {imageData.license}</span>}
+            </div>
+          )}
         </div>
 
-        <div className="grid gap-6 p-5 md:grid-cols-[1.1fr_0.9fr]">
-          <figure>
-            <img
-              src={imageSrc}
-              alt={imageAlt}
-              className="h-64 w-full rounded-2xl object-cover"
-              onError={(event) => {
-                event.currentTarget.onerror = null
-                event.currentTarget.src = cropPlaceholderImage
-              }}
-            />
-            {imageData?.sourceUrl && (
-              <figcaption className="mt-2 text-xs leading-5 text-slate-500">
-                Photo by{' '}
-                <a
-                  href={imageData.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium text-emerald-700 hover:underline"
-                >
-                  {imageData.attribution}
-                </a>
-                {imageData.license && <span> · {imageData.license}</span>}
-              </figcaption>
-            )}
-          </figure>
-
+        {/* Content */}
+        <div className="grid gap-6 overflow-y-auto p-6 md:grid-cols-[1fr_1fr]" style={{ maxHeight: '55vh' }}>
+          {/* Left col */}
           <div className="space-y-4">
-            <Badge>{crop.category}</Badge>
-            {crop.scientificName && <p className="text-sm italic text-slate-500">{crop.scientificName}</p>}
-            <p className="text-sm leading-6 text-slate-600">{crop.description}</p>
-            <div>
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.15em] text-slate-500">
-                Typical suitability
-              </h3>
-              <p className="text-sm text-slate-700">{crop.suitability}</p>
-            </div>
             <div className="flex flex-wrap gap-2">
-              {crop.tags.map((tag) => (
-                <span key={tag} className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-800">
-                  {tag}
-                </span>
-              ))}
+              <Badge className="rounded-full text-xs">{crop.category}</Badge>
+            </div>
+
+            <p className="text-sm leading-7 text-slate-600">{crop.description}</p>
+          </div>
+
+          {/* Right col */}
+          <div className="space-y-4">
+            {/* Suitability */}
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+              <div className="flex items-center gap-2 text-emerald-700 mb-2">
+                <Leaf className="h-4 w-4" />
+                <h3 className="text-xs font-semibold uppercase tracking-[0.16em]">
+                  Typical suitability
+                </h3>
+              </div>
+              <p className="text-sm text-emerald-800">{crop.suitability}</p>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <h3 className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <Tag className="h-3.5 w-3.5" />
+                Tags
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {crop.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Footer action */}
+        <div className="border-t border-slate-100 px-6 py-4">
+          <Button
+            onClick={onClose}
+            className="w-full rounded-2xl shadow-sm active:scale-95"
+            variant="outline"
+          >
+            Close
+          </Button>
         </div>
       </div>
     </div>
