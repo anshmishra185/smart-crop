@@ -1,43 +1,79 @@
-# React + TypeScript + Vite
+# Smart Crop AI - Intelligent Crop Recommendations
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A modern precision agriculture web application built with React 19, TypeScript, Vite, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Crop Recommendation Dashboard**: Input soil nutrients (N, P, K) and environmental metrics (temperature, humidity, pH, rainfall) to view tailored crop recommendations.
+- **Crop Catalog Explorer**: Search and filter curated crops with environmental requirements and descriptions.
+- **Google Sign-In Modal (Apple macOS / iOS Design)**:
+  - Responsive Apple Human Interface Design principles:
+    - Frosted glass vibrancy backdrop blur (`backdrop-blur-2xl bg-white/90`).
+    - iOS bottom sheet on mobile screens with drag handle.
+    - macOS centered floating card on desktop screens.
+    - Subtle specular border highlight and rounded corners (`rounded-[32px]`).
+    - Circular Apple-style dismiss button.
+    - ESC key dismiss and click-outside handling.
+  - Powered by official Google Identity Services (GIS).
+  - Includes a quick demo mode for instant testing before setting up Google Cloud Console credentials.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Google Cloud Console Setup (Google Sign-In)
 
-## Expanding the Oxlint configuration
+Follow these steps to configure your own Google OAuth 2.0 Web Client ID:
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+### Step 1: Open Google Cloud Console
+1. Go to [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project or select an existing one (e.g. `smart-crop-ai`).
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+### Step 2: Configure OAuth Consent Screen
+1. In the left navigation, go to **APIs & Services** > **OAuth consent screen**.
+2. Select **External** user type and click **Create**.
+3. Fill in:
+   - **App name**: `Smart Crop AI`
+   - **User support email**: Your email address
+   - **Developer contact information**: Your email address
+4. Under **Scopes**, add the standard scopes:
+   - `.../auth/userinfo.email`
+   - `.../auth/userinfo.profile`
+   - `openid`
+5. Under **Test users**, add your own Google email address while the app is in testing mode.
+6. Save and continue.
+
+### Step 3: Create OAuth 2.0 Client ID
+1. Navigate to **APIs & Services** > **Credentials**.
+2. Click **+ Create Credentials** at the top and select **OAuth client ID**.
+3. Set **Application type** to **Web application**.
+4. Set **Name** to `Smart Crop Web Client`.
+5. Under **Authorized JavaScript origins**, add:
+   - `http://localhost:5173`
+   - `http://localhost:4173` (for preview)
+   - Your production URL (e.g. `https://your-domain.com`)
+6. Click **Create**.
+7. Copy the generated **Client ID** (looks like: `xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com`).
+
+### Step 4: Configure Local Environment
+1. Create a `.env` file in the project root (using `.env.example` as a template):
+   ```env
+   VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+   ```
+2. Restart the Vite development server (`npm run dev`).
+
+---
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start local dev server
+npm run dev
+
+# Run linter
+npm run lint
+
+# Build production bundle
+npm run build
 ```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
-
-## Supabase authentication
-
-The app's `/auth` page provides account signup and login with OTP verification for both email and mobile. Signup verifies email first and then enrolls and verifies the mobile as a Supabase phone MFA factor. Login verifies email and then requires the SMS MFA code; the authenticated app state is exposed only after Supabase reports assurance level `aal2`.
-
-1. Create a Supabase project and copy its project URL and publishable (or legacy anon) key into a local `.env` file using [.env.example](./.env.example) as a template. Never use a service-role key in the browser.
-2. In Supabase Auth, enable email OTP and phone MFA. Configure an SMS provider and ensure the email OTP template displays the token (for example, `{{ .Token }}`), not only a confirmation link.
-3. Add the local and deployed app URLs to Supabase's allowed redirect/site URL configuration.
-4. Restart the Vite development server after editing `.env`.
-
-The Supabase project controls OTP expiry, rate limits, email delivery, phone delivery, and associated provider costs. Real delivery will not work until the project settings and providers are configured. Protect any future user data with Row Level Security policies that require an `aal2` assurance level; a client-side session alone is not an authorization boundary.
