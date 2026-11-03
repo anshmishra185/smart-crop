@@ -42,6 +42,54 @@ export interface DiseaseDetectionResult {
   stage?: string
   pathogenType?: 'Fungal' | 'Bacterial' | 'Viral' | 'Pest' | 'Physiological'
   affectedAreaPercentage?: number
+  topDifferentialDiagnoses?: Array<{
+    diseaseName: string
+    confidence: number
+    pathogenType: string
+  }>
+  modelTelemetry?: {
+    architecture: string
+    inputTensor: string
+    latencyMs: number
+  }
+  lesionAnnotations?: Array<{
+    id: string
+    label: string
+    xPct: number
+    yPct: number
+    widthPct: number
+    heightPct: number
+    description: string
+  }>
+  tankMixRecommendations?: {
+    chemical: Array<{
+      name: string
+      dosePerLiter: number
+      unit: string
+      activeIngredient: string
+      phiDays: number
+      reiHours: number
+    }>
+    organic: Array<{
+      name: string
+      dosePerLiter: number
+      unit: string
+      activeIngredient: string
+    }>
+  }
+  spreadForecast?: {
+    riskLevel: 'Low' | 'Medium' | 'High' | 'Critical'
+    sporeGerminationWindow: string
+    humidityThreshold: number
+    tempRange: string
+    advice: string
+  }
+  pathologyTaxonomy?: {
+    kingdom: string
+    phylum: string
+    genus: string
+    species: string
+  }
 }
 
 export interface WeatherCondition {
@@ -104,6 +152,19 @@ export interface SoilReading {
     moisture: string
     organic: string
   }
+  // ICAR 12-Parameter Extended Metrics
+  sulfur?: number // ppm (ideal 10-25)
+  calcium?: number // meq/100g (ideal 10-25)
+  magnesium?: number // meq/100g (ideal 3-8)
+  zinc?: number // ppm (ideal 0.6-2.0)
+  iron?: number // ppm (ideal 4.5-10.0)
+  copper?: number // ppm (ideal 0.2-1.0)
+  manganese?: number // ppm (ideal 2.0-8.0)
+  boron?: number // ppm (ideal 0.5-1.5)
+  // USDA Soil Texture Proportions (%)
+  sand?: number
+  silt?: number
+  clay?: number
 }
 
 export interface CalendarTask {
@@ -116,6 +177,13 @@ export interface CalendarTask {
   priority: 'low' | 'medium' | 'high'
   completed: boolean
   notes?: string
+  bbchStage?: string
+  assignedMachine?: string
+  assignedCrew?: string
+  reiHours?: number
+  phiDays?: number
+  dieselLiters?: number
+  weatherGatedStatus?: 'optimal' | 'warning' | 'locked'
 }
 
 export interface AgriNotification {
@@ -142,11 +210,50 @@ export interface RecommendationFormData {
   location?: string
 }
 
+export interface CultivarInfo {
+  name: string
+  releaseInstitution: string
+  durationDays: number
+  specialTrait: string
+  sowingWindow: string
+  seedTreatment: string
+}
+
+export interface PrecisionEconomicMetrics {
+  targetYieldQuintalsPerAcre: number
+  mandiPricePerQuintal: number
+  mspPricePerQuintal: number
+  costOfCultivationPerAcre: number
+  grossRevenuePerAcre: number
+  netProfitPerAcre: number
+  benefitCostRatio: number
+}
+
+export interface PrecisionWaterMetrics {
+  consumptionTier: 'Low' | 'Moderate' | 'High'
+  waterReqMm: number
+  pumpingHoursPerAcre: number
+  dripSavingsPct: number
+  groundwaterAlert?: string
+}
+
+export interface PrecisionRadarMetrics {
+  soilFertility: number
+  climateFit: number
+  waterAvailability: number
+  economicMargin: number
+  pestResilience: number
+}
+
 export interface CropRecommendationScore {
   crop: CropData
   score: number
   matchReasons: string[]
   cautionNotes: string[]
   suitabilityLevel: 'Highly Suitable' | 'Suitable' | 'Marginal' | 'Not Recommended'
+  radarMetrics?: PrecisionRadarMetrics
+  economicMetrics?: PrecisionEconomicMetrics
+  waterMetrics?: PrecisionWaterMetrics
+  certifiedCultivars?: CultivarInfo[]
 }
 

@@ -40,12 +40,12 @@ export function About() {
           <div className="animate-fade-up">
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-emerald-600">About</p>
             <h1 className="mt-3 max-w-2xl text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-              About Smart Crop AI
+              About Krishi Saarthi
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600">
-              Smart Crop AI is a precision-agriculture interface prototype that demonstrates how AI and
-              soil science can work together to help farmers, students, and researchers make informed
-              crop selection decisions — before a live model is ever connected.
+              Krishi Saarthi is an enterprise precision-agriculture platform that demonstrates how AI and
+              soil science work together to help farmers, agronomists, and researchers make informed
+              crop selection, disease triage, and market decisions.
             </p>
           </div>
         </PageContainer>

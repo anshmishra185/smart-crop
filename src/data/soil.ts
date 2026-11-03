@@ -14,14 +14,29 @@ export const defaultSoilReading: SoilReading = {
   qualityStatus: 'Good',
   alerts: [
     'Organic Carbon (0.72%) is slightly below optimal threshold (>0.75%). Consider incorporating farmyard manure.',
-    'Nitrogen and Phosphorus levels are well-balanced for current vegetable growth phase.'
+    'Nitrogen and Phosphorus levels are well-balanced for current growth phase.',
+    'Available Zinc (0.85 ppm) is within the safe zone, but foliar booster is recommended at tillering.'
   ],
   suggestions: {
     ph: 'Current pH of 6.8 is neutral and ideal for most nutrient absorption. Maintain with compost.',
     npk: 'Balanced NPK ratio. Top-dress with nitrogen in 2 weeks as canopy expands.',
     moisture: '38% moisture supports root respiration. Next light irrigation cycle in 48 hours.',
     organic: 'Apply 2-3 tons/acre well-decomposed FYM or vermicompost before next sowing cycle.'
-  }
+  },
+  // Secondary Nutrients
+  sulfur: 16.5, // ppm (threshold: >10 ppm)
+  calcium: 14.8, // meq/100g (threshold: 10-25 meq/100g)
+  magnesium: 4.6, // meq/100g (threshold: 3-8 meq/100g)
+  // Micronutrients
+  zinc: 0.85, // ppm (critical: 0.6 ppm)
+  iron: 6.8, // ppm (critical: 4.5 ppm)
+  copper: 0.42, // ppm (critical: 0.2 ppm)
+  manganese: 4.1, // ppm (critical: 2.0 ppm)
+  boron: 0.75, // ppm (critical: 0.5 ppm)
+  // USDA Soil Texture Proportions (%)
+  sand: 45,
+  silt: 35,
+  clay: 20
 }
 
 export function computeSoilHealth(reading: Omit<SoilReading, 'fertilityScore' | 'qualityStatus' | 'alerts' | 'suggestions'>): SoilReading {

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
+import { FieldActionDock } from '../common/FieldActionDock'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -32,15 +33,19 @@ export function AppShell({ children }: AppShellProps) {
       )}
 
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden relative">
         <Topbar onOpenMobileSidebar={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
+        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 pb-28">
+          <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-2 duration-300">
             {children}
           </div>
         </main>
+
+        {/* Global Floating Field Action Dock */}
+        <FieldActionDock />
       </div>
     </div>
   )
 }
+
 

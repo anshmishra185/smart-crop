@@ -1,38 +1,43 @@
-import {
-  BarChart3,
-  Calendar,
-  CloudSun,
-  FileText,
-  FlaskConical,
-  HelpCircle,
-  LayoutDashboard,
-  Leaf,
-  ScanEye,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  X,
-} from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAppStore } from '../../store/useAppStore'
+import { AnimatedBrandLogo } from '../common/AnimatedBrandLogo'
+import { ModuleAnimatedLogo, type AgriModuleKey } from '../common/ModuleAnimatedLogo'
+import {
+  HelpCircle,
+  Leaf,
+  Compass,
+  X,
+  ShieldCheck
+} from 'lucide-react'
 
 interface SidebarProps {
   onCloseMobile?: () => void
 }
 
-const mainNavConfig = [
-  { key: 'nav.dashboard', defaultLabel: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { key: 'nav.diseaseDetection', defaultLabel: 'Disease Detection', href: '/disease-detection', icon: ScanEye, badge: 'AI' },
-  { key: 'nav.weatherIntelligence', defaultLabel: 'Weather Intelligence', href: '/weather', icon: CloudSun },
-  { key: 'nav.soilHealth', defaultLabel: 'Soil Health Analysis', href: '/soil-health', icon: FlaskConical },
-  { key: 'nav.cropRecommendations', defaultLabel: 'Crop Recommendations', href: '/recommendations', icon: Sparkles },
-  { key: 'nav.diseaseAnalytics', defaultLabel: 'Disease Analytics', href: '/analytics', icon: BarChart3 },
-  { key: 'nav.farmingCalendar', defaultLabel: 'Farming Calendar', href: '/calendar', icon: Calendar },
-  { key: 'nav.reports', defaultLabel: 'Reports & Export', href: '/reports', icon: FileText },
-  { key: 'nav.settings', defaultLabel: 'Settings', href: '/settings', icon: Settings },
+interface NavItem {
+  key: string
+  defaultLabel: string
+  href: string
+  moduleKey: AgriModuleKey
+  badge?: string
+}
+
+const mainNavConfig: NavItem[] = [
+  { key: 'nav.dashboard', defaultLabel: 'Dashboard', href: '/', moduleKey: 'dashboard' },
+  { key: 'nav.diseaseDetection', defaultLabel: 'Disease Detection', href: '/disease-detection', moduleKey: 'disease-detection', badge: 'AI' },
+  { key: 'nav.weatherIntelligence', defaultLabel: 'Weather Intelligence', href: '/weather', moduleKey: 'weather' },
+  { key: 'nav.soilHealth', defaultLabel: 'Soil Health Analysis', href: '/soil-health', moduleKey: 'soil-health' },
+  { key: 'nav.cropRecommendations', defaultLabel: 'Crop Recommendations', href: '/recommendations', moduleKey: 'recommendations' },
+  { key: 'nav.diseaseAnalytics', defaultLabel: 'Disease Analytics', href: '/analytics', moduleKey: 'analytics' },
+  { key: 'nav.farmingCalendar', defaultLabel: 'Farming Calendar', href: '/calendar', moduleKey: 'calendar' },
+  { key: 'nav.schemes', defaultLabel: 'Schemes & Masterclass', href: '/schemes', moduleKey: 'schemes', badge: 'DBT' },
+  { key: 'nav.marketplace', defaultLabel: 'Mandi Marketplace', href: '/marketplace', moduleKey: 'marketplace', badge: 'Mandi' },
+  { key: 'nav.reports', defaultLabel: 'Reports & Export', href: '/reports', moduleKey: 'reports' },
+  { key: 'nav.settings', defaultLabel: 'Settings', href: '/settings', moduleKey: 'settings' },
 ]
 
 const secondaryNavConfig = [
+  { key: 'nav.welcomeLanding', defaultLabel: 'Enterprise Landing Page', href: '/landing', icon: Compass },
   { key: 'nav.cropLibrary', defaultLabel: 'Crop Library (30+ Species)', href: '/explore', icon: Leaf },
   { key: 'nav.docs', defaultLabel: 'Agronomic Help & Docs', href: '/about', icon: HelpCircle },
 ]
@@ -44,27 +49,11 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
       {/* Brand Header */}
       <div className="flex h-16 items-center justify-between border-b border-slate-100 px-5 dark:border-agri-darkBorder">
         <NavLink
-          to="/"
+          to="/landing"
           onClick={onCloseMobile}
-          className="group flex items-center gap-3 transition-transform"
+          className="group flex items-center transition-transform"
         >
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-forest-800 to-emerald-500 text-white shadow-md shadow-emerald-500/20 transition-all duration-300 group-hover:scale-105">
-            <Leaf className="h-5 w-5 drop-shadow-sm" />
-            <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-400 opacity-75" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-lime-500" />
-            </span>
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <p className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Crop Doctor <span className="text-emerald-600 dark:text-emerald-400">AI</span>
-              </p>
-            </div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              Smart Agri SaaS
-            </p>
-          </div>
+          <AnimatedBrandLogo size="sm" showText={true} />
         </NavLink>
 
         {onCloseMobile && (
@@ -87,14 +76,14 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
           </p>
         </div>
         <nav className="space-y-1">
-          {mainNavConfig.map(({ key, defaultLabel, href, icon: Icon, badge }) => (
+          {mainNavConfig.map(({ key, defaultLabel, href, moduleKey, badge }) => (
             <NavLink
               key={href}
               to={href}
               onClick={onCloseMobile}
               end={href === '/'}
               className={({ isActive }) =>
-                `group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 ${
+                `group flex items-center justify-between rounded-xl px-2.5 py-1.5 text-sm font-semibold transition-all duration-150 ${
                   isActive
                     ? 'bg-forest-800 text-white shadow-sm shadow-forest-900/30 dark:bg-emerald-600 dark:text-white'
                     : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-agri-darkCard dark:hover:text-white'
@@ -103,15 +92,15 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
             >
               {({ isActive }) => (
                 <>
-                  <div className="flex items-center gap-3">
-                    <Icon
-                      className={`h-4.5 w-4.5 transition-transform group-hover:scale-110 ${
-                        isActive
-                          ? 'text-white'
-                          : 'text-slate-400 group-hover:text-forest-800 dark:text-slate-400 dark:group-hover:text-emerald-400'
-                      }`}
-                    />
-                    <span>{t(key) || defaultLabel}</span>
+                  <div className="flex items-center gap-2.5">
+                    <div className="shrink-0 transition-transform group-hover:scale-105">
+                      <ModuleAnimatedLogo
+                        module={moduleKey}
+                        size="sm"
+                        showTelemetryBeacon={isActive}
+                      />
+                    </div>
+                    <span className="truncate">{t(key) || defaultLabel}</span>
                   </div>
                   {badge && (
                     <span

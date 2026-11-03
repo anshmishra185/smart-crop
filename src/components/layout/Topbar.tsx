@@ -16,6 +16,7 @@ import {
   ScanEye,
   CloudSun,
   FlaskConical,
+  Compass
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -23,6 +24,8 @@ import { useAppStore } from '../../store/useAppStore'
 import { mockWeatherService } from '../../services/mockWeatherService'
 import { supportedLanguages } from '../../lib/translations'
 import { PUNJAB_DISTRICT_COORDINATES } from '../../data/punjabDistricts'
+import { AnimatedBrandLogo } from '../common/AnimatedBrandLogo'
+import { OfflineSyncSentinel } from '../common/OfflineSyncSentinel'
 
 interface TopbarProps {
   onOpenMobileSidebar: () => void
@@ -171,6 +174,9 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur-md dark:border-agri-darkBorder dark:bg-agri-darkSurface/95 sm:px-6">
       {/* Left: Mobile trigger & Search */}
       <div className="flex items-center gap-3">
+        <Link to="/landing" className="hidden sm:flex lg:hidden items-center mr-1">
+          <AnimatedBrandLogo size="sm" showText={false} />
+        </Link>
         <button
           type="button"
           onClick={onOpenMobileSidebar}
@@ -216,6 +222,21 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
 
       {/* Right Navigation Actions */}
       <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Landing Page Quick Shortcut */}
+        <Link
+          to="/landing"
+          className="hidden xl:flex items-center gap-1.5 rounded-xl border border-slate-200/90 px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-forest-800 dark:border-agri-darkBorder dark:text-slate-300 dark:hover:bg-agri-darkCard dark:hover:text-emerald-400"
+          title="Visit Enterprise Landing Page"
+        >
+          <Compass className="h-3.5 w-3.5 text-emerald-600" />
+          <span>Landing</span>
+        </Link>
+
+        {/* Offline Sentinel Network Sync Monitor */}
+        <div className="hidden md:flex">
+          <OfflineSyncSentinel />
+        </div>
+
         {/* Language selector dropdown */}
         <div className="relative" ref={langRef}>
           <button

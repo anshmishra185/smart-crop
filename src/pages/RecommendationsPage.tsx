@@ -1,12 +1,25 @@
+import { useState } from 'react'
 import {
+  Award,
   CheckCircle2,
+  Coins,
+  Droplets,
+  FileText,
+  Layers,
   RotateCcw,
   Search,
   Sparkles,
 } from 'lucide-react'
-import { useState } from 'react'
 import { recommendationService } from '../services/recommendationService'
 import { useAppStore } from '../store/useAppStore'
+import { AudioAdvisoryButton } from '../components/common/AudioAdvisoryButton'
+import { getCropRecommendationAudioNarrative } from '../lib/advisorySpeech'
+import { AgroSuitabilityRadar } from '../components/recommendations/AgroSuitabilityRadar'
+import { CropGrossMarginCalculator } from '../components/recommendations/CropGrossMarginCalculator'
+import { CropRotationPlanner } from '../components/recommendations/CropRotationPlanner'
+import { WaterFootprintComparator } from '../components/recommendations/WaterFootprintComparator'
+import { CertifiedCultivarMatrix } from '../components/recommendations/CertifiedCultivarMatrix'
+import { CropProjectReportModal } from '../components/recommendations/CropProjectReportModal'
 import type { CropRecommendationScore, RecommendationFormData } from '../types'
 
 export function RecommendationsPage() {
@@ -31,6 +44,12 @@ export function RecommendationsPage() {
 
   const [filterCategory, setFilterCategory] = useState<string>('All')
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [activeTabCropId, setActiveTabCropId] = useState<Record<string | number, 'radar' | 'economics' | 'water' | 'cultivars'>>({})
+  const [isDprModalOpen, setIsDprModalOpen] = useState<boolean>(false)
+
+  const setCropTab = (cropId: string | number, tab: 'radar' | 'economics' | 'water' | 'cultivars') => {
+    setActiveTabCropId((prev) => ({ ...prev, [cropId]: tab }))
+  }
 
   const handleCalculate = (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,9 +82,11 @@ export function RecommendationsPage() {
     return matchesCategory && matchesSearch
   })
 
+  const topCrop = recommendations[0]
+
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Header */}
+      {/* Header Banner */}
       <div className="flex flex-col gap-4 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-card dark:border-agri-darkBorder dark:bg-agri-darkSurface sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -80,19 +101,49 @@ export function RecommendationsPage() {
             {t('recommend.title')}
           </h1>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-            {t('recommend.subtitle')}
+            ICAR & FAO ECOCROP Multi-Dimensional Agro-Ecological Decision Support System
           </p>
         </div>
 
-        <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
-          Rule-Based Agronomic Scoring · Multi-Crop Ranking
+        <div className="flex flex-wrap items-center gap-2.5">
+          {topCrop && (
+            <AudioAdvisoryButton
+              label="Listen Advisory"
+              variant="solid"
+              getNarrative={(l) =>
+                getCropRecommendationAudioNarrative(
+                  {
+                    location: form.location || selectedRegion,
+                    season: form.season || 'Rabi (Winter)',
+                    topCropName: topCrop.crop.name,
+                    suitabilityScore: topCrop.score,
+                    projectedProfitPerAcre: topCrop.economicMetrics?.netProfitPerAcre || 32000,
+                    waterFootprint: topCrop.waterMetrics?.consumptionTier || 'Moderate',
+                  },
+                  l
+                )
+              }
+            />
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsDprModalOpen(true)}
+            className="flex items-center gap-1.5 rounded-2xl bg-forest-800 px-4 py-2.5 text-xs font-black text-white hover:bg-forest-900 dark:bg-emerald-600 dark:hover:bg-emerald-700 shadow-sm transition active:scale-95"
+          >
+            <FileText className="h-4 w-4 text-emerald-300" />
+            Export Crop Dossier (DPR)
+          </button>
         </div>
       </div>
 
-      {/* Main Grid: Input Form on Left (4 cols), Ranked Crop Results on Right (8 cols) */}
+      {/* Sustainable Crop Rotation Advisory Strip */}
+      <CropRotationPlanner />
+
+      {/* Main Grid: Parameters Form (4 cols) & Ranked Crops (8 cols) */}
       <div className="grid gap-8 lg:grid-cols-12">
         {/* Form Inputs (4 cols) */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 space-y-4">
           <form
             onSubmit={handleCalculate}
             className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-card dark:border-agri-darkBorder dark:bg-agri-darkSurface space-y-4"
@@ -212,18 +263,35 @@ export function RecommendationsPage() {
               </div>
             </div>
 
+            {/* Soil Moisture */}
+            <div>
+              <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <span>Soil Moisture (VWC)</span>
+                <span className="text-blue-600 dark:text-blue-400 font-extrabold">{form.soilMoisture || 35}%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="80"
+                step="1"
+                value={form.soilMoisture || 35}
+                onChange={(e) => setForm({ ...form, soilMoisture: Number(e.target.value) })}
+                className="w-full accent-blue-600"
+              />
+            </div>
+
             <button
               type="submit"
               className="mt-4 w-full rounded-2xl bg-forest-800 py-3 text-xs font-extrabold text-white shadow-lg shadow-forest-900/20 transition hover:bg-forest-900 active:scale-95 dark:bg-emerald-600 dark:hover:bg-emerald-500"
             >
-              Evaluate Crop Suitability
+              Recalculate Agro-Suitability
             </button>
           </form>
         </div>
 
         {/* Ranked Recommendations List (8 cols) */}
         <div className="lg:col-span-8 space-y-4">
-          {/* Filter Bar */}
+          {/* Filter & Search Bar */}
           <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-agri-darkBorder dark:bg-agri-darkSurface sm:flex-row sm:items-center sm:justify-between">
             <div className="relative flex-1 max-w-xs">
               <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
@@ -237,7 +305,7 @@ export function RecommendationsPage() {
             </div>
 
             <div className="flex gap-1.5 overflow-x-auto">
-              {['All', 'Cereal', 'Pulse', 'Vegetable', 'Cash Crop'].map((cat) => (
+              {['All', 'Cereal', 'Pulse', 'Vegetable', 'Cash Crop', 'Oilseed'].map((cat) => (
                 <button
                   key={cat}
                   type="button"
@@ -255,17 +323,21 @@ export function RecommendationsPage() {
           </div>
 
           {/* Cards List */}
-          <div className="space-y-4">
-            {filteredCrops.map(({ crop, score, suitabilityLevel, matchReasons, cautionNotes }, rank) => {
+          <div className="space-y-6">
+            {filteredCrops.map((item, rank) => {
+              const { crop, score, suitabilityLevel, matchReasons, cautionNotes, radarMetrics, economicMetrics, waterMetrics, certifiedCultivars } = item
               const imageSrc = typeof crop.image === 'string' ? crop.image : (crop.image as any)?.src || ''
+              const activeTab = activeTabCropId[crop.id] || 'radar'
+
               return (
                 <div
                   key={crop.id}
-                  className="overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-card transition hover:border-emerald-300 dark:border-agri-darkBorder dark:bg-agri-darkSurface"
+                  className="overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-card transition hover:border-emerald-300 dark:border-agri-darkBorder dark:bg-agri-darkSurface space-y-4 p-5 sm:p-6"
                 >
-                  <div className="flex flex-col sm:flex-row">
+                  {/* Top Card Row */}
+                  <div className="flex flex-col sm:flex-row gap-5">
                     {/* Crop Image */}
-                    <div className="relative sm:w-52 h-44 sm:h-auto flex-shrink-0">
+                    <div className="relative sm:w-48 h-40 sm:h-auto rounded-2xl overflow-hidden shrink-0 border border-slate-200 dark:border-agri-darkBorder">
                       <img
                         src={imageSrc}
                         alt={crop.name}
@@ -276,31 +348,30 @@ export function RecommendationsPage() {
                             'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80'
                         }}
                       />
-                      <div className="absolute top-2 left-2 rounded-lg bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                      <div className="absolute top-2 left-2 rounded-lg bg-black/60 px-2 py-0.5 text-[10px] font-black text-white backdrop-blur-sm">
                         Rank #{rank + 1}
                       </div>
                     </div>
 
-                  {/* Crop Content */}
-                  <div className="flex-1 p-5 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                            {crop.name}
-                          </h3>
-                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-agri-darkCard dark:text-slate-300">
-                            {crop.category}
-                          </span>
+                    {/* Crop Details */}
+                    <div className="flex-1 space-y-2.5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                              {crop.name}
+                            </h3>
+                            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-agri-darkCard dark:text-slate-300">
+                              {crop.category}
+                            </span>
+                          </div>
+                          {crop.scientificName && (
+                            <p className="text-xs italic text-slate-400">{crop.scientificName}</p>
+                          )}
                         </div>
-                        {crop.scientificName && (
-                          <p className="text-xs italic text-slate-400">{crop.scientificName}</p>
-                        )}
-                      </div>
 
-                      <div className="text-right">
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-extrabold ${
+                          className={`rounded-full px-3 py-1 text-xs font-black ${
                             score >= 85
                               ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                               : score >= 70
@@ -311,62 +382,148 @@ export function RecommendationsPage() {
                           {score}% Match · {suitabilityLevel}
                         </span>
                       </div>
-                    </div>
 
-                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
-                      {crop.description}
-                    </p>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
+                        {crop.description}
+                      </p>
 
-                    {/* Conditions Matrix */}
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 sm:grid-cols-4">
-                      <div className="rounded-xl bg-slate-50 p-2 dark:bg-agri-darkCard">
-                        <span className="block font-bold text-slate-400">Duration</span>
-                        <span className="font-extrabold text-slate-800 dark:text-slate-200">
-                          {crop.durationDays ? `${crop.durationDays} Days` : '110-135 Days'}
-                        </span>
+                      {/* Quick Conditions Badges */}
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 sm:grid-cols-4">
+                        <div className="rounded-xl bg-slate-50 p-2 dark:bg-agri-darkCard">
+                          <span className="block font-bold text-slate-400">Duration</span>
+                          <span className="font-extrabold text-slate-800 dark:text-slate-200">
+                            {crop.durationDays ? `${crop.durationDays} Days` : '110-135 Days'}
+                          </span>
+                        </div>
+                        <div className="rounded-xl bg-slate-50 p-2 dark:bg-agri-darkCard">
+                          <span className="block font-bold text-slate-400">Water Demand</span>
+                          <span className="font-extrabold text-slate-800 dark:text-slate-200">
+                            {waterMetrics?.consumptionTier || 'Moderate'}
+                          </span>
+                        </div>
+                        <div className="rounded-xl bg-slate-50 p-2 dark:bg-agri-darkCard">
+                          <span className="block font-bold text-slate-400">Target Season</span>
+                          <span className="font-extrabold text-slate-800 dark:text-slate-200">
+                            {crop.season || 'Rabi / Kharif'}
+                          </span>
+                        </div>
+                        <div className="rounded-xl bg-slate-50 p-2 dark:bg-agri-darkCard">
+                          <span className="block font-bold text-slate-400">Net Profit</span>
+                          <span className="font-extrabold text-emerald-700 dark:text-emerald-400 font-mono">
+                            ₹{(economicMetrics?.netProfitPerAcre || 32000).toLocaleString('en-IN')}/ac
+                          </span>
+                        </div>
                       </div>
-                      <div className="rounded-xl bg-slate-50 p-2 dark:bg-agri-darkCard">
-                        <span className="block font-bold text-slate-400">Soil Moisture</span>
-                        <span className="font-extrabold text-slate-800 dark:text-slate-200">
-                          {crop.water || 'Moderate'}
-                        </span>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 p-2 dark:bg-agri-darkCard">
-                        <span className="block font-bold text-slate-400">Target Season</span>
-                        <span className="font-extrabold text-slate-800 dark:text-slate-200">
-                          {crop.season || 'Rabi / Kharif'}
-                        </span>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 p-2 dark:bg-agri-darkCard">
-                        <span className="block font-bold text-slate-400">Expected Yield</span>
-                        <span className="font-extrabold text-slate-800 dark:text-slate-200">
-                          {crop.expectedYield || '22-28 q/acre'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Match Reasons */}
-                    <div className="border-t border-slate-100 pt-2 dark:border-agri-darkBorder space-y-1">
-                      {matchReasons.map((m, idx) => (
-                        <p key={idx} className="flex items-center gap-1.5 text-xs text-emerald-800 dark:text-emerald-400 font-semibold">
-                          <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" /> {m}
-                        </p>
-                      ))}
-                      {cautionNotes.map((c, idx) => (
-                        <p key={idx} className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400">
-                          <span className="text-amber-500">⚠</span> {c}
-                        </p>
-                      ))}
                     </div>
                   </div>
+
+                  {/* Deep-Dive Sub-Module Tabs */}
+                  <div className="flex border-b border-slate-200 pt-1 dark:border-agri-darkBorder overflow-x-auto text-xs font-bold gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCropTab(crop.id, 'radar')}
+                      className={`pb-2.5 px-3 border-b-2 transition flex items-center gap-1.5 ${
+                        activeTab === 'radar'
+                          ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+                          : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <Layers className="h-3.5 w-3.5" /> Agro-Suitability Radar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCropTab(crop.id, 'economics')}
+                      className={`pb-2.5 px-3 border-b-2 transition flex items-center gap-1.5 ${
+                        activeTab === 'economics'
+                          ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+                          : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <Coins className="h-3.5 w-3.5" /> Economics & Farm ROI
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCropTab(crop.id, 'water')}
+                      className={`pb-2.5 px-3 border-b-2 transition flex items-center gap-1.5 ${
+                        activeTab === 'water'
+                          ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+                          : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <Droplets className="h-3.5 w-3.5" /> Water & Drip Savings
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCropTab(crop.id, 'cultivars')}
+                      className={`pb-2.5 px-3 border-b-2 transition flex items-center gap-1.5 ${
+                        activeTab === 'cultivars'
+                          ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+                          : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <Award className="h-3.5 w-3.5" /> Certified Cultivars
+                    </button>
+                  </div>
+
+                  {/* Tab Panes */}
+                  <div className="pt-2">
+                    {activeTab === 'radar' && (
+                      <div className="space-y-4">
+                        {radarMetrics && (
+                          <AgroSuitabilityRadar metrics={radarMetrics} cropName={crop.name} />
+                        )}
+
+                        {/* Match Reasons & Caution Notes */}
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-agri-darkBorder dark:bg-agri-darkCard space-y-2">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                            Clinical Agronomic Findings
+                          </span>
+                          {matchReasons.map((m, idx) => (
+                            <p key={idx} className="flex items-center gap-1.5 text-xs text-emerald-800 dark:text-emerald-400 font-semibold">
+                              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> {m}
+                            </p>
+                          ))}
+                          {cautionNotes.map((c, idx) => (
+                            <p key={idx} className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400">
+                              <span className="text-amber-500">⚠</span> {c}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'economics' && economicMetrics && (
+                      <CropGrossMarginCalculator metrics={economicMetrics} cropName={crop.name} />
+                    )}
+
+                    {activeTab === 'water' && waterMetrics && (
+                      <WaterFootprintComparator metrics={waterMetrics} cropName={crop.name} />
+                    )}
+
+                    {activeTab === 'cultivars' && certifiedCultivars && (
+                      <CertifiedCultivarMatrix cultivars={certifiedCultivars} cropName={crop.name} />
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
           </div>
         </div>
       </div>
+
+      {/* Official Crop Project Report Dossier Modal */}
+      {topCrop && (
+        <CropProjectReportModal
+          isOpen={isDprModalOpen}
+          onClose={() => setIsDprModalOpen(false)}
+          topRecommendation={topCrop}
+          location={form.location || selectedRegion}
+          season={form.season || 'Rabi (Winter)'}
+        />
+      )}
     </div>
   )
 }
-

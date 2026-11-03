@@ -108,7 +108,7 @@ export function Home() {
             <h1 className="mt-6 max-w-xl text-4xl font-black leading-[1.15] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.25rem] dark:text-white">
               Cultivate Smarter with{' '}
               <span className="bg-gradient-to-r from-forest-800 via-emerald-600 to-lime-500 bg-clip-text text-transparent dark:from-emerald-400 dark:to-lime-300">
-                Crop Doctor AI
+                Krishi Saarthi
               </span>
             </h1>
 
@@ -304,7 +304,7 @@ export function Home() {
           <div className="relative overflow-hidden rounded-4xl bg-gradient-to-r from-forest-900 via-forest-800 to-emerald-700 p-8 text-center text-white shadow-2xl sm:p-14">
             <Sprout className="mx-auto mb-4 h-12 w-12 text-emerald-300" />
             <h2 className="text-2xl font-black sm:text-3xl">
-              Experience the Crop Doctor AI Platform
+              Experience the Krishi Saarthi Platform
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
               Explore live simulated disease diagnostics, weather advisories, soil health gauges, and interactive charts right in your browser.

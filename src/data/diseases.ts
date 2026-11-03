@@ -29,7 +29,62 @@ export const sampleDiseaseCases: DiseaseDetectionResult[] = [
       'Apply Mancozeb 75% WP @ 2.5 g/L or Chlorothalonil 75% WP @ 2 g/L.',
       'For organic management, spray Copper Oxychloride 50% WP @ 3 g/L or Trichoderma viride @ 5 g/L.',
       'Prune and burn heavily infected lower leaves immediately to contain spore dispersal.'
-    ]
+    ],
+    topDifferentialDiagnoses: [
+      { diseaseName: 'Early Blight (Alternaria solani)', confidence: 94.8, pathogenType: 'Fungal' },
+      { diseaseName: 'Septoria Leaf Spot (Septoria lycopersici)', confidence: 3.4, pathogenType: 'Fungal' },
+      { diseaseName: 'Bacterial Spot (Xanthomonas vesicatoria)', confidence: 1.8, pathogenType: 'Bacterial' },
+    ],
+    modelTelemetry: {
+      architecture: 'ResNet-50 v2 + ViT-B/16 Multi-Scale Ensemble',
+      inputTensor: '224 × 224 × 3 RGB',
+      latencyMs: 38,
+    },
+    lesionAnnotations: [
+      {
+        id: 'lesion-1',
+        label: 'Primary Necrotic Target Center',
+        xPct: 38,
+        yPct: 42,
+        widthPct: 24,
+        heightPct: 22,
+        description: 'Concentric brown necrotic rings caused by alternariol mycotoxin breakdown.'
+      },
+      {
+        id: 'lesion-2',
+        label: 'Chlorotic Diffusion Halo',
+        xPct: 58,
+        yPct: 32,
+        widthPct: 18,
+        heightPct: 18,
+        description: 'Yellow chlorotic margin caused by pathogen enzymatic breakdown of leaf chlorophyll.'
+      }
+    ],
+    tankMixRecommendations: {
+      chemical: [
+        { name: 'Mancozeb 75% WP', dosePerLiter: 2.5, unit: 'g/L', activeIngredient: 'Mancozeb 75% w/w', phiDays: 7, reiHours: 24 },
+        { name: 'Chlorothalonil 75% WP', dosePerLiter: 2.0, unit: 'g/L', activeIngredient: 'Chlorothalonil', phiDays: 5, reiHours: 12 },
+        { name: 'Azoxystrobin 23% SC', dosePerLiter: 1.0, unit: 'mL/L', activeIngredient: 'Azoxystrobin 23%', phiDays: 3, reiHours: 12 },
+      ],
+      organic: [
+        { name: 'Copper Oxychloride 50% WP', dosePerLiter: 3.0, unit: 'g/L', activeIngredient: 'Copper Oxychloride (Metallic Cu 50%)' },
+        { name: 'Trichoderma viride 1.5% WP', dosePerLiter: 5.0, unit: 'g/L', activeIngredient: 'Trichoderma antagonistic fungus (2x10^6 CFU/g)' },
+        { name: 'Cold-Pressed Neem Oil (10,000 ppm)', dosePerLiter: 4.0, unit: 'mL/L', activeIngredient: 'Azadirachtin 1%' },
+      ]
+    },
+    spreadForecast: {
+      riskLevel: 'High',
+      sporeGerminationWindow: 'Critical: Conidial germination accelerates if relative humidity remains >80% for 6 consecutive hours.',
+      humidityThreshold: 80,
+      tempRange: '24°C – 29°C',
+      advice: 'Avoid overhead foliar wetting. Spray early morning before ambient wind exceeds 12 km/h.'
+    },
+    pathologyTaxonomy: {
+      kingdom: 'Fungi',
+      phylum: 'Ascomycota',
+      genus: 'Alternaria',
+      species: 'Alternaria solani',
+    }
   },
   {
     id: 'case-tomato-late-blight',
@@ -59,7 +114,52 @@ export const sampleDiseaseCases: DiseaseDetectionResult[] = [
       'Emergency foliar spray with Metalaxyl 8% + Mancozeb 64% WP @ 2.5 g/L.',
       'Apply Cymoxanil 8% + Mancozeb 64% WP @ 2 g/L at early lesion detection.',
       'Cease overhead sprinkler irrigation instantly to prevent zoospore germination.'
-    ]
+    ],
+    topDifferentialDiagnoses: [
+      { diseaseName: 'Late Blight (Phytophthora infestans)', confidence: 96.2, pathogenType: 'Fungal' },
+      { diseaseName: 'Early Blight (Alternaria solani)', confidence: 2.6, pathogenType: 'Fungal' },
+      { diseaseName: 'Grey Mould (Botrytis cinerea)', confidence: 1.2, pathogenType: 'Fungal' },
+    ],
+    modelTelemetry: {
+      architecture: 'ResNet-50 v2 + ViT-B/16 Multi-Scale Ensemble',
+      inputTensor: '224 × 224 × 3 RGB',
+      latencyMs: 41,
+    },
+    lesionAnnotations: [
+      {
+        id: 'lesion-1',
+        label: 'Water-soaked Necrotic Patch',
+        xPct: 45,
+        yPct: 35,
+        widthPct: 32,
+        heightPct: 28,
+        description: 'Oomycete sporangial proliferation causing rapid cellular water soaking.'
+      }
+    ],
+    tankMixRecommendations: {
+      chemical: [
+        { name: 'Metalaxyl 8% + Mancozeb 64% WP', dosePerLiter: 2.5, unit: 'g/L', activeIngredient: 'Metalaxyl-M + Mancozeb', phiDays: 14, reiHours: 24 },
+        { name: 'Cymoxanil 8% + Mancozeb 64% WP', dosePerLiter: 2.0, unit: 'g/L', activeIngredient: 'Cymoxanil + Mancozeb', phiDays: 10, reiHours: 24 },
+        { name: 'Dimethomorph 50% WP', dosePerLiter: 1.0, unit: 'g/L', activeIngredient: 'Dimethomorph', phiDays: 7, reiHours: 12 },
+      ],
+      organic: [
+        { name: 'Copper Hydroxide 53.8% DF', dosePerLiter: 2.0, unit: 'g/L', activeIngredient: 'Copper Hydroxide' },
+        { name: 'Bacillus subtilis (QST 713)', dosePerLiter: 4.0, unit: 'mL/L', activeIngredient: 'B. subtilis biological antagonist' },
+      ]
+    },
+    spreadForecast: {
+      riskLevel: 'Critical',
+      sporeGerminationWindow: 'Critical Alert: Oomycete zoospores swim in surface water film. Night temp 15-20°C and >90% humidity causes 100% field infection in 48 hours.',
+      humidityThreshold: 90,
+      tempRange: '15°C – 21°C',
+      advice: 'Apply systemic fungicide immediately before morning dew sets in.'
+    },
+    pathologyTaxonomy: {
+      kingdom: 'Chromista (Stramenopila)',
+      phylum: 'Oomycota',
+      genus: 'Phytophthora',
+      species: 'Phytophthora infestans',
+    }
   },
   {
     id: 'case-tomato-healthy',

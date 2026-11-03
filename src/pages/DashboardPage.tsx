@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -5,7 +6,9 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Droplets,
+  FileText,
   FlaskConical,
+  GraduationCap,
   Leaf,
   ScanEye,
   ShieldAlert,
@@ -18,24 +21,34 @@ import { Link } from 'react-router-dom'
 import { Area, AreaChart, ResponsiveContainer } from 'recharts'
 import { useAppStore } from '../store/useAppStore'
 import { AudioAdvisoryButton } from '../components/common/AudioAdvisoryButton'
-import { getWeatherAlertAudioNarrative } from '../lib/advisorySpeech'
+import {
+  getMorningOperationsBriefingAudio,
+  getWeatherAlertAudioNarrative,
+} from '../lib/advisorySpeech'
+import { CadastralFarmParcelMap } from '../components/dashboard/CadastralFarmParcelMap'
+import { NdviCanopyAnalyzer } from '../components/dashboard/NdviCanopyAnalyzer'
+import { OperationsWorkOrderFeed } from '../components/dashboard/OperationsWorkOrderFeed'
+import { MandiCommodityTicker } from '../components/dashboard/MandiCommodityTicker'
+import { IotSensorMeshStatus } from '../components/dashboard/IotSensorMeshStatus'
+import { OperationsBriefingModal } from '../components/dashboard/OperationsBriefingModal'
 
 // Mini sparkline data for KPI cards
 const sparklineHealthy = [
-  { val: 1200 }, { val: 1350 }, { val: 1500 }, { val: 1680 }, { val: 1780 }, { val: 1840 }
+  { val: 1200 }, { val: 1350 }, { val: 1500 }, { val: 1680 }, { val: 1780 }, { val: 1840 },
 ]
 const sparklineInfected = [
-  { val: 420 }, { val: 390 }, { val: 360 }, { val: 380 }, { val: 350 }, { val: 380 }
+  { val: 420 }, { val: 390 }, { val: 360 }, { val: 380 }, { val: 350 }, { val: 380 },
 ]
 const sparklineSoil = [
-  { val: 78 }, { val: 80 }, { val: 82 }, { val: 79 }, { val: 83 }, { val: 84 }
+  { val: 78 }, { val: 80 }, { val: 82 }, { val: 79 }, { val: 83 }, { val: 84 },
 ]
 const sparklineTemp = [
-  { val: 22 }, { val: 24 }, { val: 27 }, { val: 25 }, { val: 23 }, { val: 24 }
+  { val: 22 }, { val: 24 }, { val: 27 }, { val: 25 }, { val: 23 }, { val: 24 },
 ]
 
 export function DashboardPage() {
   const { weather, soilReading, lastDiagnosis, selectedRegion, t } = useAppStore()
+  const [isBriefingModalOpen, setIsBriefingModalOpen] = useState(false)
 
   const kpis = [
     {
@@ -120,7 +133,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-7 animate-in fade-in duration-300">
-      {/* Top Banner / Welcome Row */}
+      {/* Top Banner / Precision Farm Command Center Welcome Row */}
       <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-900 via-forest-900 to-emerald-950 p-6 text-white shadow-xl dark:border-agri-darkBorder sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2 text-emerald-300">
@@ -138,6 +151,32 @@ export function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          <AudioAdvisoryButton
+            label="Morning Briefing"
+            variant="ghost"
+            getNarrative={(l) =>
+              getMorningOperationsBriefingAudio(
+                {
+                  totalAcres: 2402,
+                  healthyRatio: 76.6,
+                  activeAlertsCount: 3,
+                  weatherTemp: weather.temp,
+                  weatherCondition: weather.condition,
+                },
+                l
+              )
+            }
+          />
+
+          <button
+            type="button"
+            onClick={() => setIsBriefingModalOpen(true)}
+            className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-bold text-white backdrop-blur-md transition hover:bg-white/20 active:scale-95 shadow-sm"
+          >
+            <FileText className="h-4 w-4 text-emerald-300" />
+            Export Shift Log
+          </button>
+
           <Link
             to="/disease-detection"
             className="flex items-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-xs font-extrabold text-slate-900 shadow-lg shadow-lime-400/20 transition hover:bg-lime-300 active:scale-95"
@@ -265,7 +304,22 @@ export function DashboardPage() {
         })}
       </div>
 
-      {/* Middle Grid: Disease Scanner Quick Banner & Quick Actions */}
+      {/* Module 1: Interactive Cadastral Farm Parcel GIS Map & Drone Sentinel */}
+      <CadastralFarmParcelMap />
+
+      {/* Module 2: Live NDVI (Normalized Difference Vegetation Index) Spectrum Analyzer */}
+      <NdviCanopyAnalyzer />
+
+      {/* Module 3 & 5: AI Operations Work Orders & LoRaWAN Hardware IoT Mesh */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <OperationsWorkOrderFeed />
+        <IotSensorMeshStatus />
+      </div>
+
+      {/* Module 4: Real-Time APMC Mandi Commodity Market Ticker & Harvest Valuation */}
+      <MandiCommodityTicker />
+
+      {/* Recent Disease Scanner Diagnostic & Quick Actions Center */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Disease Diagnostic Snapshot */}
         <div className="lg:col-span-2 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-card dark:border-agri-darkBorder dark:bg-agri-darkSurface">
@@ -385,10 +439,28 @@ export function DashboardPage() {
               </div>
               <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
             </Link>
+
+            <Link
+              to="/schemes"
+              className="flex items-center justify-between rounded-2xl border border-amber-200/60 bg-amber-50/60 p-3 text-xs font-bold text-amber-900 transition hover:border-amber-400 hover:bg-amber-100/70 dark:border-amber-500/20 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:border-amber-500"
+            >
+              <div className="flex items-center gap-2.5">
+                <GraduationCap className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <span>Punjab Govt Schemes &amp; Masterclasses</span>
+              </div>
+              <span className="flex items-center gap-1 text-[10px] font-black uppercase text-amber-700 dark:text-amber-300">
+                DBT Portal <ArrowRight className="h-3 w-3" />
+              </span>
+            </Link>
           </div>
         </div>
       </div>
+
+      {/* Printable Operations Shift Report Modal */}
+      <OperationsBriefingModal
+        isOpen={isBriefingModalOpen}
+        onClose={() => setIsBriefingModalOpen(false)}
+      />
     </div>
   )
 }
-

@@ -31,11 +31,20 @@ const ReportsPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 )
+const SchemesAndLearningPage = lazy(() =>
+  import('./pages/SchemesAndLearningPage').then((m) => ({ default: m.SchemesAndLearningPage }))
+)
+const MarketplacePage = lazy(() =>
+  import('./pages/MarketplacePage').then((m) => ({ default: m.MarketplacePage }))
+)
 const ExploreCrops = lazy(() =>
   import('./pages/ExploreCrops').then((m) => ({ default: m.ExploreCrops }))
 )
 const About = lazy(() =>
   import('./pages/About').then((m) => ({ default: m.About }))
+)
+const LandingPage = lazy(() =>
+  import('./pages/LandingPage').then((m) => ({ default: m.LandingPage }))
 )
 
 function PageLoader() {
@@ -70,10 +79,16 @@ function App() {
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/schemes" element={<SchemesAndLearningPage />} />
+            <Route path="/learning" element={<Navigate to="/schemes" replace />} />
+            <Route path="/marketplace" element={<MarketplacePage />} />
+            <Route path="/mandi" element={<Navigate to="/marketplace" replace />} />
 
-            {/* Additional Knowledge Pages */}
+            {/* Additional Knowledge & Landing Pages */}
             <Route path="/explore" element={<ExploreCrops />} />
             <Route path="/about" element={<About />} />
+            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/welcome" element={<Navigate to="/landing" replace />} />
 
             {/* Catch-all redirect to root dashboard */}
             <Route path="*" element={<Navigate to="/" replace />} />

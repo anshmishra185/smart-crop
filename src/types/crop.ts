@@ -22,6 +22,8 @@ export interface CropData {
   water?: string
   season?: string
   growthHabit?: string
+  durationDays?: number
+  expectedYield?: string
 }
 
 export interface RecommendationFormData {

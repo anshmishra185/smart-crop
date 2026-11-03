@@ -1,10 +1,12 @@
 {
-  "name": "ai-crop-detection-ai-ml-model",
+  "name": "krishi-saarthi",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node dev-runner.js",
+    "dev:frontend": "vite",
+    "dev:backend": "python run_backend.py",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
