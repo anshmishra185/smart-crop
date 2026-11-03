@@ -41,3 +41,4 @@ class CorrelationIdAndTelemetryMiddleware(BaseHTTPMiddleware):
         logger.info(json.dumps(log_entry))
 
         return response
+

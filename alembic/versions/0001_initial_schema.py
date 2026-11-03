@@ -116,3 +116,4 @@ def downgrade() -> None:
     op.drop_table('mandi_orders')
     op.drop_table('crop_listings')
     op.drop_table('users')
+

@@ -58,3 +58,4 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
         response.headers["X-RateLimit-Limit"] = str(self.max_requests)
         response.headers["X-RateLimit-Remaining"] = str(max(0, self.max_requests - len(self.clients[client_ip])))
         return response
+
