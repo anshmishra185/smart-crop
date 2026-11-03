@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .database import engine, Base, SessionLocal
+from .database import engine, Base, SessionLocal, DATABASE_URL
 from .models import CropListing, User
 from .routers import disease, recommendations, marketplace, mandi
 
@@ -123,7 +123,7 @@ def health_check():
         "ai_vision_engine": "CIB&RC 38-Class Pathology ResNet Classifier (Active)",
         "ai_soil_engine": "Multi-Variable Agronomic Nutrient Matcher (Active)",
         "mandi_escrow_engine": "Dual Razorpay + Cash On Delivery Settlement (Active)",
-        "database": "SQLAlchemy SQLite Embedded Engine (Connected)"
+        "database": f"SQLAlchemy Relational Engine ({'PostgreSQL Cloud' if 'postgresql' in DATABASE_URL else 'SQLite Embedded'}) (Connected)"
     }
 
 if __name__ == "__main__":
