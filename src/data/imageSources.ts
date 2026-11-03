@@ -1,119 +1,512 @@
 import type { CropCategory, CropImageData } from '../types/crop'
 
+export const HERO_IMAGE = {
+  src: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1920&q=85',
+  alt: 'Lush modern agricultural green crop fields stretching into the horizon at golden hour with precision farming rows',
+  attribution: 'Federico Respini / Unsplash',
+  license: 'Unsplash Commercial Free',
+}
+
 export const cropPlaceholderImage =
-  'data:image/svg+xml;charset=UTF-8,' +
-  encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900">
-      <defs>
-        <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0%" stop-color="#ecfdf5"/>
-          <stop offset="100%" stop-color="#dcfce7"/>
-        </linearGradient>
-      </defs>
-      <rect width="1200" height="900" fill="url(#bg)"/>
-      <rect x="120" y="140" width="960" height="620" rx="40" fill="#ffffff" opacity="0.9"/>
-      <circle cx="610" cy="360" r="180" fill="#bbf7d0" opacity="0.7"/>
-      <path d="M455 500C512 420 570 385 620 360C670 335 720 330 760 340" fill="none" stroke="#166534" stroke-width="26" stroke-linecap="round"/>
-      <path d="M510 505C560 455 610 435 660 430C705 425 760 430 820 470" fill="none" stroke="#15803d" stroke-width="20" stroke-linecap="round"/>
-      <text x="600" y="670" text-anchor="middle" font-size="52" font-family="Arial, sans-serif" fill="#14532d" font-weight="700">Crop image unavailable</text>
-    </svg>
-  `)
-
-const riceImage: CropImageData = {
-  src: '/crops/rice-field.jpg',
-  alt: 'Green rice plants growing in a paddy field at golden hour',
-  sourceUrl:
-    'https://commons.wikimedia.org/wiki/File:Green_rice_sheaves_planted_in_a_paddy_field_with_long_shadows_at_golden_hour_in_Don_Det_Laos.jpg',
-  attribution: 'Basile Morin / Wikimedia Commons',
-  license: 'CC BY-SA 4.0',
-}
-
-const wheatImage: CropImageData = {
-  src: '/crops/wheat-field.jpg',
-  alt: 'A mature wheat field at sunset',
-  sourceUrl: 'https://commons.wikimedia.org/wiki/File:Sunset-over-the-wheat-field-featured.jpg',
-  attribution: 'Dreamy Pixel / Wikimedia Commons',
-  license: 'CC BY 4.0',
-}
-
-const maizeImage: CropImageData = {
-  src: '/crops/maize-field.jpg',
-  alt: 'A corn field in Liechtenstein',
-  sourceUrl:
-    'https://commons.wikimedia.org/wiki/File:Field,_corn,_Liechtenstein,_Mountains,_Alps,_Vaduz,_sky,_clouds,_landscape.jpg',
-  attribution: 'Paranoid / Wikimedia Commons',
-  license: 'Public domain',
-}
-
-const soybeanImage: CropImageData = {
-  src: '/crops/soybean-field.jpg',
-  alt: 'Soybeans growing between walnut trees in an alley-cropping field',
-  sourceUrl:
-    'https://commons.wikimedia.org/wiki/File:Missouri_soybean_and_walnut_alley_cropping_(25706978934).jpg',
-  attribution: 'National Agroforestry Center / Wikimedia Commons',
-  license: 'CC BY 2.0',
-}
-
-const tomatoImage: CropImageData = {
-  src: '/crops/tomato-plant.jpg',
-  alt: 'A tomato plant with ripening tomatoes',
-  sourceUrl: 'https://commons.wikimedia.org/wiki/File:Tomato_plant_2026_G2.jpg',
-  attribution: 'George Chernilevsky / Wikimedia Commons',
-  license: 'CC BY 4.0',
-}
-
-const cottonImage: CropImageData = {
-  src: '/crops/cotton-boll.jpg',
-  alt: 'A cotton boll nearly ready for harvest',
-  sourceUrl: 'https://commons.wikimedia.org/wiki/File:Cotton_boll_nearly_ready_for_harvest.jpg',
-  attribution: 'Michael Bass-Deschenes / Wikimedia Commons',
-  license: 'CC BY 2.0',
-}
-
-const potatoImage: CropImageData = {
-  src: '/crops/potato-field.jpg',
-  alt: 'A potato field in Aoya, Japan',
-  sourceUrl:
-    'https://commons.wikimedia.org/wiki/File:Potato_field_in_Aoya,_Tottori(shared_place_for_Anti-nuclear_power_plant).jpg',
-  attribution: '聖石大戦ぶぅぶぅ / Wikimedia Commons',
-  license: 'CC BY-SA 4.0',
-}
-
-const sunflowerImage: CropImageData = {
-  src: '/crops/sunflower.jpg',
-  alt: 'A sunflower with a bumblebee',
-  sourceUrl: 'https://commons.wikimedia.org/wiki/File:Sunflower_and_a_bee.jpg',
-  attribution: 'Tomas Castelazo / Wikimedia Commons',
-  license: 'CC BY-SA 4.0',
-}
-
-const mangoImage: CropImageData = {
-  src: '/crops/mangoes.jpg',
-  alt: 'Whole and sliced mangoes',
-  sourceUrl: 'https://commons.wikimedia.org/wiki/File:Mangos_-_single_and_halved.jpg',
-  attribution: 'Ivar Leidus / Wikimedia Commons',
-  license: 'CC BY-SA 4.0',
-}
+  'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80'
 
 export const cropImages: Record<string, CropImageData> = {
-  rice: riceImage,
-  wheat: wheatImage,
-  maize: maizeImage,
-  soybean: soybeanImage,
-  tomato: tomatoImage,
-  cotton: cottonImage,
-  potato: potatoImage,
-  sunflower: sunflowerImage,
-  mango: mangoImage,
-  Cereal: wheatImage,
-  Millet: wheatImage,
-  Pulse: soybeanImage,
-  Oilseed: sunflowerImage,
-  'Cash Crop': cottonImage,
-  Vegetable: tomatoImage,
-  Fruit: mangoImage,
+  // Cereals & Grains
+  rice: {
+    src: 'https://images.unsplash.com/photo-1536657464919-892534f60d6e?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Lush vibrant green rice seedlings in flooded terraced paddy fields',
+    sourceUrl: 'https://unsplash.com/photos/rice-field',
+    attribution: 'Sandy Zebua / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  wheat: {
+    src: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Golden ears of mature wheat swaying in the sunlight ready for harvest',
+    sourceUrl: 'https://unsplash.com/photos/wheat-field',
+    attribution: 'Polina Rytova / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  maize: {
+    src: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Healthy tall green maize stalk with ripe ears of sweetcorn in farm field',
+    sourceUrl: 'https://unsplash.com/photos/corn-field',
+    attribution: 'Waldemar Brandt / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  barley: {
+    src: 'https://images.unsplash.com/photo-1535242208474-9a2793260ca8?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Ears of golden barley with long awns in a sunlit cereal field',
+    sourceUrl: 'https://unsplash.com/photos/barley-field',
+    attribution: 'Melissa Askew / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  oats: {
+    src: 'https://images.unsplash.com/photo-1516054575922-f0b8eeadec1a?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Golden ripe oat panicles hanging gracefully on stems in the field',
+    sourceUrl: 'https://unsplash.com/photos/oats-field',
+    attribution: 'Inga Seliverstova / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  sorghum: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Sorghum_bicolor_002.JPG/1280px-Sorghum_bicolor_002.JPG',
+    alt: 'Mature sorghum grain heads with dense bronze and reddish seeds',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Sorghum_bicolor_002.JPG',
+    attribution: 'H. Zell / Wikimedia Commons',
+    license: 'CC BY-SA 3.0',
+  },
+  pearlMillet: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Pearl_millet_field_in_Rajasthan.jpg/1280px-Pearl_millet_field_in_Rajasthan.jpg',
+    alt: 'Mature pearl millet (bajra) crop with prominent cylindrical grain spikes',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Pearl_millet_field_in_Rajasthan.jpg',
+    attribution: 'LRBurdak / Wikimedia Commons',
+    license: 'CC BY-SA 3.0',
+  },
+  fingerMillet: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Pearl_millet_field_in_Rajasthan.jpg/1280px-Pearl_millet_field_in_Rajasthan.jpg',
+    alt: 'Mature millet crop in farm field',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Pearl_millet_field_in_Rajasthan.jpg',
+    attribution: 'Wikimedia Commons',
+    license: 'CC BY-SA 3.0',
+  },
+  foxtailMillet: {
+    src: 'https://images.unsplash.com/photo-1535242208474-9a2793260ca8?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Golden millet crop in farm',
+    sourceUrl: 'https://unsplash.com/photos/barley-field',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  prosoMillet: {
+    src: 'https://images.unsplash.com/photo-1516054575922-f0b8eeadec1a?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Cereal grains in farm field',
+    sourceUrl: 'https://unsplash.com/photos/oats-field',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+
+  // Pulses & Legumes
+  chickpea: {
+    src: 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Organic chickpea pods hanging on lush green chickpea foliage in farm field',
+    sourceUrl: 'https://unsplash.com/photos/chickpeas',
+    attribution: 'Milada Vigerova / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  pigeonPea: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Cajanus_cajan_flowers_and_pods.jpg/1280px-Cajanus_cajan_flowers_and_pods.jpg',
+    alt: 'Flowering pigeon pea bush with yellow blossoms and green seed pods',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Cajanus_cajan_flowers_and_pods.jpg',
+    attribution: 'J.M. Garg / Wikimedia Commons',
+    license: 'CC BY 3.0',
+  },
+  greenGram: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Vigna_radiata_pods.jpg/1280px-Vigna_radiata_pods.jpg',
+    alt: 'Clusters of maturing green gram pods on vibrant green foliage',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Vigna_radiata_pods.jpg',
+    attribution: 'Ton Rulkens / Wikimedia Commons',
+    license: 'CC BY-SA 2.0',
+  },
+  blackGram: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Vigna_mungo_plant_with_pods.jpg/1280px-Vigna_mungo_plant_with_pods.jpg',
+    alt: 'Healthy black gram crop showing trifoliate leaves and developing pods',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Vigna_mungo_plant_with_pods.jpg',
+    attribution: 'Ramesh NG / Wikimedia Commons',
+    license: 'CC BY-SA 2.0',
+  },
+  lentil: {
+    src: 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Lentil pods in organic farm field',
+    sourceUrl: 'https://unsplash.com/photos/chickpeas',
+    attribution: 'Milada Vigerova / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  fieldPea: {
+    src: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Green pea crop in field',
+    sourceUrl: 'https://unsplash.com/photos/peas',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  kidneyBean: {
+    src: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Kidney bean crop in field',
+    sourceUrl: 'https://unsplash.com/photos/beans',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  cowpea: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Vigna_radiata_pods.jpg/1280px-Vigna_radiata_pods.jpg',
+    alt: 'Cowpea pods on plant',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Vigna_radiata_pods.jpg',
+    attribution: 'Wikimedia Commons',
+    license: 'CC BY-SA 2.0',
+  },
+  soybean: {
+    src: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Vibrant green soybean plants growing in organized agricultural rows',
+    sourceUrl: 'https://unsplash.com/photos/soybean-plants',
+    attribution: 'Kelly Sikkema / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+
+  // Oilseeds & Cash Crops
+  mustard: {
+    src: 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Expansive blooming yellow mustard flowers covering farmland',
+    sourceUrl: 'https://unsplash.com/photos/mustard-field',
+    attribution: 'Peter Nguyen / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  groundnut: {
+    src: 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Groundnut peanut plant in farm',
+    sourceUrl: 'https://unsplash.com/photos/peanuts',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  sesame: {
+    src: 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Sesame crop flowering in farm',
+    sourceUrl: 'https://unsplash.com/photos/sesame',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  sunflower: {
+    src: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Blooming sunflower field with vibrant yellow petals facing the morning sun',
+    sourceUrl: 'https://unsplash.com/photos/sunflower-field',
+    attribution: 'Aaron Burden / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  linseed: {
+    src: 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Flax / linseed crop in field',
+    sourceUrl: 'https://unsplash.com/photos/flax',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  castor: {
+    src: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Castor plant with seed clusters',
+    sourceUrl: 'https://unsplash.com/photos/castor',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  rapeseed: {
+    src: 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Rapeseed field in golden yellow bloom',
+    sourceUrl: 'https://unsplash.com/photos/rapeseed',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  safflower: {
+    src: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Safflower orange flower head in farm',
+    sourceUrl: 'https://unsplash.com/photos/safflower',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  cotton: {
+    src: 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Fluffy white ripe cotton bolls ready for harvest on open plantation bushes',
+    sourceUrl: 'https://unsplash.com/photos/cotton-field',
+    attribution: 'Trisha Downing / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  sugarcane: {
+    src: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Dense tall green sugarcane plantation stalks under clear tropical sky',
+    sourceUrl: 'https://unsplash.com/photos/sugarcane',
+    attribution: 'Sandy Millar / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  jute: {
+    src: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Tall green jute crop in farm',
+    sourceUrl: 'https://unsplash.com/photos/jute',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  tobacco: {
+    src: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Broad leaf tobacco plantation',
+    sourceUrl: 'https://unsplash.com/photos/tobacco',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+
+  // Vegetables & Tubers
+  potato: {
+    src: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Freshly dug organic farm potatoes with natural soil and agricultural field',
+    sourceUrl: 'https://unsplash.com/photos/potatoes',
+    attribution: 'Lars Blankers / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  tomato: {
+    src: 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Plump red vine tomatoes hanging in a sun-drenched agricultural greenhouse',
+    sourceUrl: 'https://unsplash.com/photos/tomatoes',
+    attribution: 'Dan Meyers / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  onion: {
+    src: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Freshly harvested yellow and red onion bulbs with earthy roots and green stems',
+    sourceUrl: 'https://unsplash.com/photos/onions',
+    attribution: 'Mockup Graphics / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  garlic: {
+    src: 'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Freshly harvested whole garlic heads with papery white skins and roots',
+    sourceUrl: 'https://unsplash.com/photos/garlic',
+    attribution: 'Gaelle Marcel / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  chilli: {
+    src: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Glossy bright red and emerald green chilli peppers ripening on plant bush',
+    sourceUrl: 'https://unsplash.com/photos/chillies',
+    attribution: 'Timothy Dykes / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  brinjal: {
+    src: 'https://images.unsplash.com/photo-1628773822503-930a8449c2a6?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Deep purple glossy eggplant hanging on an organic farm plant with green calyx',
+    sourceUrl: 'https://unsplash.com/photos/eggplant',
+    attribution: 'CDC / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  okra: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Abelmoschus_esculentus_pods.jpg/1280px-Abelmoschus_esculentus_pods.jpg',
+    alt: 'Fresh ridged green okra (lady finger) pods growing upright on plant stalk',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Abelmoschus_esculentus_pods.jpg',
+    attribution: 'Rasbak / Wikimedia Commons',
+    license: 'CC BY-SA 3.0',
+  },
+  cabbage: {
+    src: 'https://images.unsplash.com/photo-1598030304671-5aa1d6f21128?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Crisp textured round green cabbage heads growing in rich agricultural soil',
+    sourceUrl: 'https://unsplash.com/photos/cabbage',
+    attribution: 'Eric Prouzet / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  cauliflower: {
+    src: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Fresh white organic cauliflower curd head nestled inside protective green outer leaves',
+    sourceUrl: 'https://unsplash.com/photos/cauliflower',
+    attribution: 'Martin Adams / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  carrot: {
+    src: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Vibrant crisp orange carrots with freshly harvested green foliage tops',
+    sourceUrl: 'https://unsplash.com/photos/carrots',
+    attribution: 'Harshal S. Hirve / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  radish: {
+    src: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=1200&q=80',
+    alt: 'White farm radishes with green leaves',
+    sourceUrl: 'https://unsplash.com/photos/radish',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  spinach: {
+    src: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Lush dark green organic spinach leaves',
+    sourceUrl: 'https://unsplash.com/photos/spinach',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  peas: {
+    src: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Fresh green sweet peas on vine',
+    sourceUrl: 'https://unsplash.com/photos/peas',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  cucumber: {
+    src: 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Crisp green cucumbers on plant vine',
+    sourceUrl: 'https://unsplash.com/photos/cucumber',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  pumpkin: {
+    src: 'https://images.unsplash.com/photo-1506917728037-b6af01a7d403?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Ripe orange pumpkin in field patch',
+    sourceUrl: 'https://unsplash.com/photos/pumpkin',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  bitterGourd: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Abelmoschus_esculentus_pods.jpg/1280px-Abelmoschus_esculentus_pods.jpg',
+    alt: 'Bitter gourd vegetable on trellis',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Abelmoschus_esculentus_pods.jpg',
+    attribution: 'Wikimedia Commons',
+    license: 'CC BY-SA 3.0',
+  },
+  bottleGourd: {
+    src: 'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Fresh bottle gourd hanging on farm vine',
+    sourceUrl: 'https://unsplash.com/photos/gourd',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  capsicum: {
+    src: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Sweet green and red bell peppers on plant',
+    sourceUrl: 'https://unsplash.com/photos/peppers',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+
+  // Fruits
+  mango: {
+    src: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Ripe golden and blushing red mangoes hanging from tree branches in orchard',
+    sourceUrl: 'https://unsplash.com/photos/mangoes',
+    attribution: 'Brenda Godinez / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  banana: {
+    src: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Large healthy bunch of fresh green bananas growing on a palm tree',
+    sourceUrl: 'https://unsplash.com/photos/bananas',
+    attribution: 'Scott Webb / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  apple: {
+    src: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Ripe red crisp apples hanging from leafy branches in a sunny orchard',
+    sourceUrl: 'https://unsplash.com/photos/apples',
+    attribution: 'Tuqa Nabi / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  orange: {
+    src: 'https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Juicy ripe oranges on citrus grove tree',
+    sourceUrl: 'https://unsplash.com/photos/oranges',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  grapes: {
+    src: 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Clusters of ripe purple and green wine grapes hanging on vines in vineyard',
+    sourceUrl: 'https://unsplash.com/photos/grapes',
+    attribution: 'Amos Bar-Zeev / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  pomegranate: {
+    src: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Ripe red pomegranates on tree',
+    sourceUrl: 'https://unsplash.com/photos/pomegranate',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  papaya: {
+    src: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Papaya fruit cluster on tree',
+    sourceUrl: 'https://unsplash.com/photos/papaya',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  guava: {
+    src: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Fresh green guavas on branch',
+    sourceUrl: 'https://unsplash.com/photos/guava',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  watermelon: {
+    src: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Plump striped green watermelons ripening in a summer farm field',
+    sourceUrl: 'https://unsplash.com/photos/watermelon',
+    attribution: 'Mockup Graphics / Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  muskmelon: {
+    src: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Ripe cantaloupe muskmelon on farm vine',
+    sourceUrl: 'https://unsplash.com/photos/melon',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  pineapple: {
+    src: 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Tropical pineapple plant in plantation field',
+    sourceUrl: 'https://unsplash.com/photos/pineapple',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  litchi: {
+    src: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Clusters of red litchi fruits on tree',
+    sourceUrl: 'https://unsplash.com/photos/litchi',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  lemon: {
+    src: 'https://images.unsplash.com/photo-1534483509719-3feaee7c30da?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Bright yellow lemons hanging on citrus tree',
+    sourceUrl: 'https://unsplash.com/photos/lemon',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  strawberry: {
+    src: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Juicy red ripe strawberries in fruit farm',
+    sourceUrl: 'https://unsplash.com/photos/strawberries',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+
+  // Fallbacks by Category
+  Cereal: {
+    src: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Cereal grains field',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  Millet: {
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Pearl_millet_field_in_Rajasthan.jpg/1280px-Pearl_millet_field_in_Rajasthan.jpg',
+    alt: 'Millet crop field',
+    attribution: 'Wikimedia Commons',
+    license: 'CC BY-SA 3.0',
+  },
+  Pulse: {
+    src: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Legume pulse crop field',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  Oilseed: {
+    src: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Oilseed crop field',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  'Cash Crop': {
+    src: 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Cash crop field',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  Vegetable: {
+    src: 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Vegetable crops in greenhouse farm',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
+  Fruit: {
+    src: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=1200&q=80',
+    alt: 'Fruit orchard canopy',
+    attribution: 'Unsplash',
+    license: 'Unsplash Commercial Free',
+  },
 }
 
 export function getCropImage(imageKey: string, category: CropCategory): CropImageData {
-  return cropImages[imageKey] ?? cropImages[category]
+  return cropImages[imageKey] ?? cropImages[category] ?? cropImages.Cereal
 }

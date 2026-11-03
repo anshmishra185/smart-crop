@@ -141,9 +141,9 @@ export function About() {
 
         {/* CTA */}
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-center">
-          <Link to="/dashboard">
+          <Link to="/">
             <Button className="gap-2 rounded-full px-7 shadow-md transition-all hover:shadow-glow-emerald active:scale-95">
-              Try the dashboard
+              Launch Farm Dashboard
               <ExternalLink className="h-4 w-4" />
             </Button>
           </Link>

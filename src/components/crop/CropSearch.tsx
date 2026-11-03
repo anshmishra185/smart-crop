@@ -2,6 +2,7 @@ import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { cropCatalogue } from '../../data/crops'
+import { useAppStore } from '../../store/useAppStore'
 import type { CropData } from '../../types/crop'
 import { CropCard } from './CropCard'
 import { CropDetails } from './CropDetails'
@@ -11,6 +12,7 @@ const categories = ['All', ...Array.from(new Set(cropCatalogue.map((c) => c.cate
 type LayoutMode = 'grid' | 'list'
 
 export function CropSearch() {
+  const { t } = useAppStore()
   const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState('All')
   const [selectedCrop, setSelectedCrop] = useState<CropData | null>(null)
@@ -40,7 +42,7 @@ export function CropSearch() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search crops, tags, or descriptions…"
+              placeholder={`${t('common.search')}...`}
               className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-9 text-sm text-slate-900 outline-none transition-all focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
               aria-label="Search crops"
             />
@@ -71,7 +73,7 @@ export function CropSearch() {
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  {cat}
+                  {cat === 'All' ? t('calendar.all') : cat}
                 </button>
               ))}
             </div>

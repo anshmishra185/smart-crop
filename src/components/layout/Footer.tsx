@@ -14,8 +14,10 @@ const socialLinks = [
   { icon: Mail, href: 'mailto:feedback@smartcropai.example', label: 'Email' },
 ]
 
+const CURRENT_YEAR = 2026
+
 export function Footer() {
-  const year = new Date().getFullYear()
+  const year = CURRENT_YEAR
 
   return (
     <footer className="border-t border-slate-200 bg-slate-900 text-slate-400">

@@ -147,9 +147,7 @@ export function CropInputForm({
               {/* Range hint */}
               {!hasError && (
                 <p id={`${field}-hint`} className="text-[11px] text-slate-400">
-                  {config.min !== undefined && config.max !== undefined
-                    ? `Typical range: ${config.min} – ${config.max} ${config.unit ?? ''}`
-                    : `Enter a valid ${config.label.toLowerCase()} value`}
+                  Typical range: {config.min} – {config.max} {config.unit}
                 </p>
               )}
 

@@ -4,7 +4,24 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Smart Crop AI - Intelligent Crop Recommendations</title>
+    <title>Crop Doctor AI – Industrial Smart Agriculture & AI Crop Disease Detection Platform</title>
+    <meta name="description" content="Commercial-grade precision agriculture SaaS platform featuring AI crop disease diagnostics, weather intelligence, soil NPK analysis, and decision support." />
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('crop_doctor_theme');
+          if (saved === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+          var savedOutdoor = localStorage.getItem('crop_doctor_outdoor');
+          if (savedOutdoor === 'true') {
+            document.documentElement.classList.add('outdoor-mode');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>

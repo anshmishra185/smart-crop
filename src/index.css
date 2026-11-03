@@ -25,6 +25,17 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background: #f8fafc;
+  color: #0f172a;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #09130D;
+  color: #f1f5f9;
 }
 
 #root {
@@ -141,4 +152,43 @@ main {
   outline: 2px solid #10b981;
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+
+/* High-Contrast Outdoor Field Mode (Sunlight Visibility) */
+html.outdoor-mode {
+  filter: contrast(1.12) saturate(1.1);
+}
+
+html.outdoor-mode body {
+  background-color: #f1f5f9;
+}
+
+html.outdoor-mode.dark body {
+  background-color: #040905;
+}
+
+html.outdoor-mode .shadow-card,
+html.outdoor-mode .shadow-sm,
+html.outdoor-mode .shadow-md {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18) !important;
+}
+
+html.outdoor-mode [class*="border-slate-200"],
+html.outdoor-mode [class*="border-slate-100"] {
+  border-color: #64748b !important;
+}
+
+html.outdoor-mode.dark [class*="border-agri-darkBorder"] {
+  border-color: #334155 !important;
+}
+
+html.outdoor-mode p,
+html.outdoor-mode span,
+html.outdoor-mode button,
+html.outdoor-mode h1,
+html.outdoor-mode h2,
+html.outdoor-mode h3,
+html.outdoor-mode h4 {
+  font-weight: 600 !important;
 }
