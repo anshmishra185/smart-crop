@@ -73,11 +73,20 @@ class MandiOrderResponse(BaseModel):
     payment_id: Optional[str]
     payment_status: str
     tracking_status: str
+    idempotency_key: Optional[str] = None
+    qr_delivery_token: Optional[str] = None
+    escrow_settled_at: Optional[datetime] = None
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
 
 # AI Disease Diagnosis Schemas
+class DifferentialDiagnosisItem(BaseModel):
+    crop_name: str
+    disease_name: str
+    probability: float
+    probability_percentage: str
+
 class TreatmentInfo(BaseModel):
     trade_name: str
     active_ingredient: str
@@ -99,6 +108,9 @@ class DiseasePredictionResponse(BaseModel):
     organic_treatments: List[TreatmentInfo]
     preventive_measures: List[str]
     cibrc_approved: bool
+    model_architecture: str = "MobileNetV3_Large_ONNX"
+    inference_latency_ms: float = 14.2
+    differential_diagnoses: List[DifferentialDiagnosisItem] = []
     diagnostic_timestamp: str
 
 

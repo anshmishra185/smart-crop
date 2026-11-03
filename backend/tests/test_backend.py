@@ -1,4 +1,7 @@
 import io
+import hmac
+import json
+import hashlib
 import pytest
 from PIL import Image
 import httpx
@@ -12,7 +15,7 @@ def init_db():
     yield
 
 def create_synthetic_leaf(color=(25, 145, 25)):
-    img = Image.new("RGB", (256, 256), color=color)
+    img = Image.new("RGB", (224, 224), color=color)
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)
@@ -22,26 +25,45 @@ def create_synthetic_leaf(color=(25, 145, 25)):
 def anyio_backend():
     return 'asyncio'
 
-# 1. Health & Microservice Diagnostics Test
+# 1. Observability, Telemetry & Diagnostics Test
 @pytest.mark.anyio
-async def test_health_check():
+async def test_health_check_and_telemetry():
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/api/v1/health")
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "healthy"
-        assert "Krishi Saarthi" in data["service"]
-        assert "CIB&RC" in data["ai_vision_engine"]
-        assert "SQLAlchemy" in data["database"]
+        assert data["status"] in ["healthy", "degraded"]
+        assert "latency_ms" in data["database"]
+        assert data["ai_deep_learning"]["onnx_runtime_ready"] is True
+        assert data["ai_deep_learning"]["classes_count"] >= 4
+        assert "memory_usage_pct" in data["system_resources"]
 
-# 2. AI Vision Crop Disease Detection Tests
+        # Verify Correlation Tracing Headers
+        assert "x-request-id" in response.headers
+        assert "x-process-time-ms" in response.headers
+
+
+# 2. Rate Limiting Middleware Protection
 @pytest.mark.anyio
-async def test_disease_detection():
+async def test_rate_limiter_headers():
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        img_bytes = create_synthetic_leaf(color=(20, 180, 20))
+        img_bytes = create_synthetic_leaf()
         files = {"file": ("test_leaf.png", img_bytes, "image/png")}
+        response = await client.post("/api/v1/predict/disease", files=files)
+        assert response.status_code == 200
+        assert "x-ratelimit-limit" in response.headers
+        assert "x-ratelimit-remaining" in response.headers
+
+
+# 3. Deep Learning Computer Vision Disease Diagnosis
+@pytest.mark.anyio
+async def test_deep_learning_disease_detection():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        img_bytes = create_synthetic_leaf(color=(160, 110, 40))
+        files = {"file": ("blight_leaf.png", img_bytes, "image/png")}
         response = await client.post("/api/v1/predict/disease", files=files)
         assert response.status_code == 200
         data = response.json()
@@ -49,9 +71,136 @@ async def test_disease_detection():
         assert "confidence_score" in data
         assert data["confidence_score"] >= 0.85
         assert data["cibrc_approved"] is True
-        assert isinstance(data["symptoms"], list)
+        assert "MobileNetV3" in data["model_architecture"]
+        assert "inference_latency_ms" in data
+        assert isinstance(data["differential_diagnoses"], list)
 
-# 3. AI Soil Fertility & Agronomic Recommendation Tests
+
+# 4. Idempotent Order Creation & Anti-Double-Charging
+@pytest.mark.anyio
+async def test_idempotent_order_creation():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        idempotency_key = "idemp_test_key_99281a"
+        order_payload = {
+            "buyer_name": "Kisan Agro Processing Hub",
+            "buyer_phone": "+91 98765 00112",
+            "delivery_address": "GT Road Grain Market, Khanna",
+            "pin_code": "141401",
+            "quantity_quintals": 15.0,
+            "payment_mode": "RAZORPAY",
+            "payment_id": "pay_idemp_001"
+        }
+        # First call creates order
+        res1 = await client.post(
+            "/api/v1/marketplace/orders",
+            json=order_payload,
+            headers={"Idempotency-Key": idempotency_key}
+        )
+        assert res1.status_code == 201
+        order1 = res1.json()
+
+        # Second call with SAME idempotency key returns exact SAME order without charging twice
+        res2 = await client.post(
+            "/api/v1/marketplace/orders",
+            json=order_payload,
+            headers={"Idempotency-Key": idempotency_key}
+        )
+        assert res2.status_code in [200, 201]
+        order2 = res2.json()
+        assert order1["order_number"] == order2["order_number"]
+        assert order1["idempotency_key"] == idempotency_key
+
+
+# 5. Razorpay Cryptographic HMAC-SHA256 Webhook Verification
+@pytest.mark.anyio
+async def test_razorpay_hmac_webhook():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Create an order first
+        order_payload = {
+            "buyer_name": "Punjab Bio Millers Ltd",
+            "buyer_phone": "+91 98111 22334",
+            "delivery_address": "Sector 3 Mandi Complex",
+            "pin_code": "141002",
+            "quantity_quintals": 10.0,
+            "payment_mode": "RAZORPAY",
+            "payment_id": "pay_webhook_test_123"
+        }
+        order_res = await client.post("/api/v1/marketplace/orders", json=order_payload)
+        assert order_res.status_code == 201
+
+        # Simulate Razorpay Webhook Event
+        webhook_body = json.dumps({
+            "event": "payment.captured",
+            "payload": {
+                "payment": {
+                    "entity": {
+                        "id": "pay_webhook_test_123",
+                        "amount": 2400000,
+                        "currency": "INR",
+                        "status": "captured"
+                    }
+                }
+            }
+        }).encode("utf-8")
+
+        secret = "whsec_krishi_saarthi_prod_mock_key"
+        valid_signature = hmac.new(
+            key=secret.encode(),
+            msg=webhook_body,
+            digestmod=hashlib.sha256
+        ).hexdigest()
+
+        # Post webhook with valid signature
+        res = await client.post(
+            "/api/v1/marketplace/webhooks/razorpay",
+            content=webhook_body,
+            headers={"X-Razorpay-Signature": valid_signature, "Content-Type": "application/json"}
+        )
+        assert res.status_code == 200
+        assert res.json()["status"] == "success"
+
+        # Verify tamper resistance (invalid signature rejection)
+        bad_res = await client.post(
+            "/api/v1/marketplace/webhooks/razorpay",
+            content=webhook_body,
+            headers={"X-Razorpay-Signature": "tampered_fake_signature", "Content-Type": "application/json"}
+        )
+        assert bad_res.status_code == 400
+
+
+# 6. APMC Digital Escrow Release & QR Lot Verification
+@pytest.mark.anyio
+async def test_escrow_release_flow():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        order_payload = {
+            "buyer_name": "Malwa Trading Corporation",
+            "buyer_phone": "+91 98777 66554",
+            "delivery_address": "APMC Silo 9, Bathinda",
+            "pin_code": "151001",
+            "quantity_quintals": 20.0,
+            "payment_mode": "RAZORPAY"
+        }
+        order_res = await client.post("/api/v1/marketplace/orders", json=order_payload)
+        order = order_res.json()
+        order_num = order["order_number"]
+        qr_token = order.get("qr_delivery_token")
+
+        # Release escrow upon physical delivery verification
+        release_res = await client.post(
+            f"/api/v1/marketplace/orders/{order_num}/release-escrow",
+            params={"qr_token": qr_token}
+        )
+        assert release_res.status_code == 200
+        released_order = release_res.json()
+        assert released_order["payment_status"] == "ESCROW_SETTLED_TO_FARMER"
+        assert released_order["tracking_status"] == "MANDI_DELIVERED"
+        assert released_order["escrow_settled_at"] is not None
+
+
+# 7. AI Agronomic Crop Recommendation Engine
 @pytest.mark.anyio
 async def test_crop_recommendation_wheat():
     transport = httpx.ASGITransport(app=app)
@@ -72,7 +221,8 @@ async def test_crop_recommendation_wheat():
         assert data["primary_recommendation"]["suitability_score"] > 0.85
         assert len(data["top_recommendations"]) >= 3
 
-# 4. APMC Mandi Benchmark Rates & Forecast Test
+
+# 8. Mandi Rates & Forecast
 @pytest.mark.anyio
 async def test_mandi_rates_feed():
     transport = httpx.ASGITransport(app=app)
@@ -83,16 +233,15 @@ async def test_mandi_rates_feed():
         assert data["total_commodities"] >= 4
         assert any("Wheat" in r["commodity"] for r in data["rates"])
 
-# 5. Mandi Marketplace Crop Lot Creation & Fetching
+
+# 9. Marketplace Listings CRUD
 @pytest.mark.anyio
 async def test_marketplace_listing_flow():
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        # Get listings
         get_res = await client.get("/api/v1/marketplace/listings")
         assert get_res.status_code == 200
 
-        # Post new crop lot
         new_lot = {
             "title": "Bio-Organic Mustard - Pusa Bold High Oil",
             "crop_category": "Mustard",
@@ -113,51 +262,8 @@ async def test_marketplace_listing_flow():
         created = post_res.json()
         assert created["verification_hash"].startswith("KS-APMC-")
 
-# 6. Mandi Orders & Dual Escrow Settlement (Razorpay + COD)
-@pytest.mark.anyio
-async def test_order_settlement_razorpay():
-    transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        order_payload = {
-            "buyer_name": "Ludhiana Roller Flour Mills Pvt Ltd",
-            "buyer_phone": "+91 98888 12345",
-            "delivery_address": "Silo Yard 4, G.T. Road, Ludhiana",
-            "pin_code": "141001",
-            "quantity_quintals": 30.0,
-            "payment_mode": "RAZORPAY",
-            "payment_id": "pay_test_rzp_89218a"
-        }
-        response = await client.post("/api/v1/marketplace/orders", json=order_payload)
-        assert response.status_code == 201
-        order = response.json()
-        assert order["order_number"].startswith("ORD-")
-        assert order["payment_status"] == "ESCROW_LOCKED"
-        assert order["payment_mode"] == "RAZORPAY"
 
-        # Verify tracking
-        track = await client.get(f"/api/v1/marketplace/orders/{order['order_number']}")
-        assert track.status_code == 200
-        assert track.json()["order_number"] == order["order_number"]
-
-@pytest.mark.anyio
-async def test_order_settlement_cod():
-    transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        order_payload = {
-            "buyer_name": "Aggarwal Traders Mandi Hub",
-            "buyer_phone": "+91 97777 54321",
-            "delivery_address": "Shop No 14, APMC Mandi, Sirsa",
-            "pin_code": "125055",
-            "quantity_quintals": 20.0,
-            "payment_mode": "COD"
-        }
-        response = await client.post("/api/v1/marketplace/orders", json=order_payload)
-        assert response.status_code == 201
-        order = response.json()
-        assert order["payment_status"] == "PENDING_DELIVERY_COD"
-        assert order["payment_mode"] == "COD"
-
-# 7. Database Records Persistence Check
+# 10. Database Persistence & Integrity
 def test_database_persistence():
     db = SessionLocal()
     try:

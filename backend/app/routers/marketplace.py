@@ -1,13 +1,19 @@
+import os
 import uuid
+import hmac
 import hashlib
+import json
+from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import CropListing, MandiOrder, User
 from ..schemas import CropListingCreate, CropListingResponse, MandiOrderCreate, MandiOrderResponse
 
 router = APIRouter(prefix="/api/v1/marketplace", tags=["Mandi Marketplace"])
+
+RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "whsec_krishi_saarthi_prod_mock_key")
 
 @router.get("/listings", response_model=List[CropListingResponse])
 def get_crop_listings(
@@ -35,7 +41,6 @@ def create_crop_listing(
     """
     Publish a new verified farmer crop listing with cryptographic lot verification.
     """
-    # Create or find user
     user = db.query(User).filter(User.phone_number == payload.seller_phone).first()
     if not user:
         user = User(
@@ -78,12 +83,20 @@ def create_crop_listing(
 @router.post("/orders", response_model=MandiOrderResponse, status_code=201)
 def create_mandi_order(
     payload: MandiOrderCreate,
+    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
     db: Session = Depends(get_db)
 ):
     """
     Execute Mandi Procurement Contract with APMC Escrow Settlement (Razorpay or COD).
+    Supports Idempotency-Key to prevent duplicate procurement charges.
     """
-    unit_price = 2400.0  # Default benchmark price
+    # 1. Idempotency Check
+    if idempotency_key:
+        existing_order = db.query(MandiOrder).filter(MandiOrder.idempotency_key == idempotency_key).first()
+        if existing_order:
+            return existing_order
+
+    unit_price = 2400.0
     listing = None
 
     if payload.listing_id:
@@ -98,12 +111,12 @@ def create_mandi_order(
         unit_price = listing.price_per_quintal
 
     base_amount = unit_price * payload.quantity_quintals
-    escrow_fee = round(base_amount * 0.0075, 2)  # 0.75% Mandi Escrow & Transit Insurance
+    escrow_fee = round(base_amount * 0.0075, 2)
     total_amount = base_amount + escrow_fee
 
     order_number = f"ORD-{uuid.uuid4().hex[:10].upper()}"
+    qr_token = f"QR-{uuid.uuid4().hex[:12].upper()}"
 
-    # Auto-register buyer if needed
     buyer = db.query(User).filter(User.phone_number == payload.buyer_phone).first()
     if not buyer:
         buyer = User(
@@ -131,16 +144,87 @@ def create_mandi_order(
         payment_mode=payload.payment_mode.upper(),
         payment_id=payload.payment_id or f"pay_cod_{uuid.uuid4().hex[:8]}",
         payment_status=payment_status,
-        tracking_status="ORDER_PLACED"
+        tracking_status="ORDER_PLACED",
+        idempotency_key=idempotency_key,
+        qr_delivery_token=qr_token
     )
 
-    # Deduct listing inventory if connected to specific listing
     if listing:
         listing.quantity_quintals -= payload.quantity_quintals
         if listing.quantity_quintals <= 0:
             listing.status = "SOLD"
 
     db.add(order)
+    db.commit()
+    db.refresh(order)
+    return order
+
+
+@router.post("/webhooks/razorpay", status_code=200)
+async def razorpay_webhook(
+    request: Request,
+    x_razorpay_signature: str = Header(..., alias="X-Razorpay-Signature"),
+    db: Session = Depends(get_db)
+):
+    """
+    Cryptographically verifies Razorpay HMAC-SHA256 webhook signatures
+    and safely advances APMC Escrow to PAYMENT_ESCROW_LOCKED.
+    """
+    body = await request.body()
+    
+    # Compute expected HMAC-SHA256 signature
+    expected_sig = hmac.new(
+        key=RAZORPAY_WEBHOOK_SECRET.encode(),
+        msg=body,
+        digestmod=hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected_sig, x_razorpay_signature):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid Razorpay cryptographic webhook signature."
+        )
+
+    try:
+        data = json.loads(body.decode())
+        event = data.get("event")
+        payload = data.get("payload", {})
+        payment = payload.get("payment", {}).get("entity", {})
+        payment_id = payment.get("id")
+
+        if event in ["payment.captured", "order.paid"] and payment_id:
+            order = db.query(MandiOrder).filter(MandiOrder.payment_id == payment_id).first()
+            if order:
+                order.payment_status = "ESCROW_LOCKED"
+                order.tracking_status = "DISPATCH_SCHEDULED"
+                db.commit()
+
+        return {"status": "success", "event_processed": event}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Webhook payload processing error: {str(e)}")
+
+
+@router.post("/orders/{order_number}/release-escrow", response_model=MandiOrderResponse)
+def release_escrow_to_farmer(
+    order_number: str,
+    qr_token: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    APMC Yard Weighment Verification & Digital Escrow Release.
+    Releases locked escrow funds directly to the farmer once physical lot delivery is verified.
+    """
+    order = db.query(MandiOrder).filter(MandiOrder.order_number == order_number).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Mandi order not found.")
+
+    if qr_token and order.qr_delivery_token and qr_token != order.qr_delivery_token:
+        raise HTTPException(status_code=400, detail="Invalid QR delivery verification token.")
+
+    order.payment_status = "ESCROW_SETTLED_TO_FARMER"
+    order.tracking_status = "MANDI_DELIVERED"
+    order.escrow_settled_at = datetime.now(timezone.utc)
+
     db.commit()
     db.refresh(order)
     return order
