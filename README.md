@@ -1,79 +1,65 @@
-# Smart Crop AI - Intelligent Crop Recommendations
+# 🌾 Krishi Saarthi (कृषि सारथी) — Enterprise AI Agritech Platform
 
-A modern precision agriculture web application built with React 19, TypeScript, Vite, and Tailwind CSS.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/anshmishra185/smart-crop)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/anshmishra185/smart-crop)
 
-## Features
-
-- **Crop Recommendation Dashboard**: Input soil nutrients (N, P, K) and environmental metrics (temperature, humidity, pH, rainfall) to view tailored crop recommendations.
-- **Crop Catalog Explorer**: Search and filter curated crops with environmental requirements and descriptions.
-- **Google Sign-In Modal (Apple macOS / iOS Design)**:
-  - Responsive Apple Human Interface Design principles:
-    - Frosted glass vibrancy backdrop blur (`backdrop-blur-2xl bg-white/90`).
-    - iOS bottom sheet on mobile screens with drag handle.
-    - macOS centered floating card on desktop screens.
-    - Subtle specular border highlight and rounded corners (`rounded-[32px]`).
-    - Circular Apple-style dismiss button.
-    - ESC key dismiss and click-outside handling.
-  - Powered by official Google Identity Services (GIS).
-  - Includes a quick demo mode for instant testing before setting up Google Cloud Console credentials.
+An enterprise-grade precision agriculture and APMC mandi trading terminal built with **React 19**, **FastAPI**, **SQLAlchemy**, and **Scikit-Learn/ResNet AI models**.
 
 ---
 
-## Google Cloud Console Setup (Google Sign-In)
+## ⚡ Instant Cloud Deployment
 
-Follow these steps to configure your own Google OAuth 2.0 Web Client ID:
+### 1. Backend Microservice + Cloud PostgreSQL (Render)
+Click the button below to provision the **FastAPI Web Service** and **Managed Cloud PostgreSQL Database** automatically via the included `render.yaml` Blueprint:
 
-### Step 1: Open Google Cloud Console
-1. Go to [Google Cloud Console](https://console.cloud.google.com/).
-2. Create a new project or select an existing one (e.g. `smart-crop-ai`).
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/anshmishra185/smart-crop)
 
-### Step 2: Configure OAuth Consent Screen
-1. In the left navigation, go to **APIs & Services** > **OAuth consent screen**.
-2. Select **External** user type and click **Create**.
-3. Fill in:
-   - **App name**: `Smart Crop AI`
-   - **User support email**: Your email address
-   - **Developer contact information**: Your email address
-4. Under **Scopes**, add the standard scopes:
-   - `.../auth/userinfo.email`
-   - `.../auth/userinfo.profile`
-   - `openid`
-5. Under **Test users**, add your own Google email address while the app is in testing mode.
-6. Save and continue.
+### 2. Frontend Web Terminal (Netlify)
+Click the button below to build and deploy the React 19 Frontend on Netlify's global edge network:
 
-### Step 3: Create OAuth 2.0 Client ID
-1. Navigate to **APIs & Services** > **Credentials**.
-2. Click **+ Create Credentials** at the top and select **OAuth client ID**.
-3. Set **Application type** to **Web application**.
-4. Set **Name** to `Smart Crop Web Client`.
-5. Under **Authorized JavaScript origins**, add:
-   - `http://localhost:5173`
-   - `http://localhost:4173` (for preview)
-   - Your production URL (e.g. `https://your-domain.com`)
-6. Click **Create**.
-7. Copy the generated **Client ID** (looks like: `xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com`).
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/anshmishra185/smart-crop)
 
-### Step 4: Configure Local Environment
-1. Create a `.env` file in the project root (using `.env.example` as a template):
-   ```env
-   VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-   ```
-2. Restart the Vite development server (`npm run dev`).
+*Note: In Netlify Site Settings > Environment Variables, add `VITE_API_URL` pointing to your Render backend URL.*
 
 ---
 
-## Development
+## 🌟 Core Architecture & Features
+
+1. **AI Vision Crop Disease Diagnosis**:
+   - 38-class CIB&RC pathology classifier with lesion severity estimation.
+   - Dual curative chemical prescription and biological bio-control remedies (Trichoderma, Pseudomonas).
+
+2. **Agronomic Soil & Crop Recommendation**:
+   - Multi-variable matching on Soil N-P-K mineral levels, pH buffering, seasonal rainfall, temperature, and humidity.
+   - Yield projection (q/acre) and estimated gross margins (₹/acre).
+
+3. **APMC Mandi Marketplace & Dual Escrow**:
+   - Verified farmer lot listings with cryptographic SHA-256 batch hashes (`KS-APMC-...`).
+   - Dual settlement gateways: **Razorpay Online Escrow** and **Cash on Delivery (COD)**.
+
+4. **Real-Time APMC Mandi Rate Telemetry**:
+   - Live modal prices, MSP benchmarks, and 7-day predictive curves across North Indian mandis.
+
+---
+
+## 💻 Local Development
+
+Run both the Frontend and Backend simultaneously with a single command:
 
 ```bash
-# Install dependencies
-npm install
-
-# Start local dev server
 npm run dev
+```
 
-# Run linter
-npm run lint
+- **Frontend**: [http://localhost:5173/](http://localhost:5173/)
+- **Backend Swagger Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **API Health Telemetry**: [http://127.0.0.1:8000/api/v1/health](http://127.0.0.1:8000/api/v1/health)
 
-# Build production bundle
-npm run build
+---
+
+## 🧪 Automated Testing
+
+Run the full Python test suite covering database persistence, ML vision diagnosis, crop suitability, and order escrow:
+
+```bash
+python -m pytest backend/tests/test_backend.py -v
 ```
