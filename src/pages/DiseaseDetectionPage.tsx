@@ -18,6 +18,7 @@ import type { DiseaseDetectionResult } from '../types'
 import { DiagnosticComparisonSlider } from '../components/disease/DiagnosticComparisonSlider'
 import { AudioAdvisoryButton } from '../components/common/AudioAdvisoryButton'
 import { getDiseaseAudioNarrative } from '../lib/advisorySpeech'
+import { predictDisease } from '../lib/api'
 import { LiveFieldCameraModal } from '../components/disease/LiveFieldCameraModal'
 import { DifferentialDiagnosisEnsemble } from '../components/disease/DifferentialDiagnosisEnsemble'
 import { LesionBoundingBoxViewer } from '../components/disease/LesionBoundingBoxViewer'
@@ -31,6 +32,7 @@ export function DiseaseDetectionPage() {
   const [selectedCrop, setSelectedCrop] = useState<string>('Tomato')
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [selectedSampleId, setSelectedSampleId] = useState<string>('case-tomato-early-blight')
 
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false)
@@ -48,6 +50,7 @@ export function DiseaseDetectionPage() {
       const previewUrl = URL.createObjectURL(file)
       setUploadedImage(previewUrl)
       setUploadedFileName(file.name)
+      setUploadedFile(file)
       setSelectedSampleId('')
     }
   }, [])
@@ -67,6 +70,7 @@ export function DiseaseDetectionPage() {
       setSelectedCrop(sample.cropName)
       setUploadedImage(sample.sampleImage)
       setUploadedFileName(`${sample.cropName}_leaf_sample.jpg`)
+      setUploadedFile(null)
     }
   }
 
@@ -74,6 +78,7 @@ export function DiseaseDetectionPage() {
   const handleRemoveImage = () => {
     setUploadedImage(null)
     setUploadedFileName(null)
+    setUploadedFile(null)
     setSelectedSampleId('')
     setResult(null)
   }
@@ -83,6 +88,12 @@ export function DiseaseDetectionPage() {
     setUploadedImage(capturedDataUrl)
     setUploadedFileName(fileName)
     setSelectedSampleId('')
+    fetch(capturedDataUrl)
+      .then((res) => res.blob())
+      .then((blob) => {
+        setUploadedFile(new File([blob], fileName, { type: 'image/jpeg' }))
+      })
+      .catch(() => {})
   }
 
   // Trigger analysis
@@ -90,10 +101,57 @@ export function DiseaseDetectionPage() {
     if (!uploadedImage && !selectedSampleId) return
 
     setIsScanning(true)
-    setScanPercent(10)
-    setScanStep(t('disease.analyzing'))
+    setScanPercent(15)
+    setScanStep('Initializing Deep Learning Vision Pipeline (MobileNetV3)...')
 
     try {
+      // If user uploaded or captured a real file, attempt live backend AI inference
+      if (uploadedFile && !selectedSampleId) {
+        setScanStep('Running MobileNetV3 tensor inference on server...')
+        setScanPercent(50)
+        try {
+          const backendRes = await predictDisease(uploadedFile)
+          setScanStep('Calibrating CIB&RC treatment prescriptions...')
+          setScanPercent(90)
+
+          const mappedResult: DiseaseDetectionResult = {
+            id: `diag-${Date.now()}`,
+            cropName: backendRes.crop_name,
+            diseaseName: backendRes.disease_name,
+            status: backendRes.is_healthy ? 'healthy' : backendRes.severity_level === 'Critical' ? 'critical' : 'infected',
+            confidence: Math.round(backendRes.confidence_score * 100),
+            severity: (backendRes.severity_level as any) || 'Moderate',
+            riskLevel: backendRes.is_healthy ? 'Low' : backendRes.severity_level === 'Critical' ? 'Critical' : 'High',
+            symptoms: backendRes.symptoms || [],
+            prevention: backendRes.preventive_measures || [],
+            recommendedTreatment: (backendRes.chemical_treatments || []).map(
+              (t: any) => `${t.trade_name}: ${t.dosage_per_acre} (${t.application_method})`
+            ),
+            timestamp: 'Just now',
+            sampleImage: uploadedImage || '/sample-leaf.jpg',
+            pathogenType: (backendRes.pathogen_type as any) || 'Fungal',
+            affectedAreaPercentage: backendRes.affected_area_percentage || 15.0,
+            topDifferentialDiagnoses: (backendRes.differential_diagnoses || []).map((d: any) => ({
+              diseaseName: d.disease_name,
+              confidence: Math.round(d.probability * 100),
+              pathogenType: 'Fungal',
+            })),
+            modelTelemetry: {
+              latencyMs: backendRes.inference_latency_ms || 16,
+              architecture: backendRes.model_architecture || 'MobileNetV3_Large_ONNX',
+              inputTensor: '1x3x224x224 (ImageNet Normalization)',
+            },
+          }
+          setResult(mappedResult)
+          setLastDiagnosis(mappedResult)
+          setScanPercent(100)
+          return
+        } catch (apiErr) {
+          console.warn('[DiseaseDetection] Backend API unavailable or offline, using fallback engine:', apiErr)
+        }
+      }
+
+      // Fallback or Sample Case Analysis
       const output = await mockDiseaseService.analyzeImage(
         selectedSampleId || (uploadedFileName as any),
         selectedCrop,

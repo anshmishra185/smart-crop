@@ -36,16 +36,30 @@ export function LiveFieldCameraModal({ isOpen, onClose, onCapture }: LiveFieldCa
 
     async function initCamera() {
       setCameraError(null)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (isMounted) {
+          setCameraError('Camera API requires HTTPS or a modern browser. You can use the button below or upload a photo.')
+        }
+        return
+      }
+
       try {
         const constraints: MediaStreamConstraints = {
           video: {
             facingMode: { ideal: facingMode },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
           },
           audio: false,
         }
-        const s = await navigator.mediaDevices.getUserMedia(constraints)
+        let s: MediaStream
+        try {
+          s = await navigator.mediaDevices.getUserMedia(constraints)
+        } catch {
+          // Fallback to generic video stream if resolution constraints fail on older devices
+          s = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        }
+
         if (!isMounted) {
           s.getTracks().forEach((t) => t.stop())
           return
@@ -53,11 +67,12 @@ export function LiveFieldCameraModal({ isOpen, onClose, onCapture }: LiveFieldCa
         streamRef.current = s
         if (videoRef.current) {
           videoRef.current.srcObject = s
+          videoRef.current.play().catch(() => {})
         }
       } catch (err) {
         if (isMounted) {
           console.warn('Camera access unavailable:', err)
-          setCameraError('Camera access unavailable or permission denied. You can use sample photos or file upload.')
+          setCameraError('Camera access unavailable or permission denied. You can use the simulated capture button or upload a photo.')
         }
       }
     }
