@@ -1,0 +1,116 @@
+# Production Default Values for Krishi Saarthi Enterprise Helm Chart
+global:
+  environment: production
+  domain: krishisaarthi.in
+  tlsSecretName: krishi-saarthi-tls-prod
+
+backend:
+  replicaCount: 3
+  image:
+    repository: ghcr.io/anshmishra185/krishi-saarthi-backend
+    tag: v2.0.0
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  env:
+    APP_ENV: production
+    DATABASE_URL: postgresql://krishi_app:Ksaarthi2026Secure!@postgres-cluster.db.svc.cluster.local:5432/krishi_saarthi_prod
+    REDIS_URL: redis://:Redis2026MasterKey!@redis-cluster.cache.svc.cluster.local:6379/0
+    KAFKA_BOOTSTRAP_SERVERS: kafka-cluster-kafka-bootstrap.eventstream.svc.cluster.local:9092
+    ENABLE_PROMETHEUS_METRICS: "true"
+    CORS_ALLOWED_ORIGINS: "https://krishisaarthi.in,https://app.krishisaarthi.in"
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  probes:
+    liveness:
+      path: /api/v1/health
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      path: /api/v1/health
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 2
+
+frontend:
+  replicaCount: 3
+  image:
+    repository: ghcr.io/anshmishra185/krishi-saarthi-frontend
+    tag: v2.0.0
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    allowPrivilegeEscalation: false
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 60
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 75
+  keda:
+    enabled: true
+    mandiAuctionMorningScale:
+      timezone: Asia/Kolkata
+      startCron: "0 6 * * *"
+      endCron: "0 11 * * *"
+      desiredReplicas: 25
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 25m
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "15"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-Frame-Options: DENY";
+  hosts:
+    - host: krishisaarthi.in
+      paths:
+        - path: /api/
+          pathType: Prefix
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend
+
+podDisruptionBudget:
+  minAvailable: 2
+
+networkPolicy:
+  enabled: true

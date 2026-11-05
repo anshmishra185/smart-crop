@@ -1,0 +1,16 @@
+apiVersion: v2
+name: krishi-saarthi
+description: Enterprise Helm Chart for Krishi Saarthi AI Agritech & APMC FinTech Escrow Ecosystem
+type: application
+version: 2.0.0
+appVersion: "2.0.0"
+keywords:
+  - agritech
+  - fintech
+  - machine-learning
+  - onnx
+  - sentinel-satellite
+  - apmc-escrow
+maintainers:
+  - name: Krishi Saarthi SRE & Platform Team
+    email: platform-sre@krishisaarthi.in

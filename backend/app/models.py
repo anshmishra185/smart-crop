@@ -125,3 +125,17 @@ class SoilAssessment(Base):
     estimated_gross_margin = Column(Float, default=0.0)
     soil_health_grade = Column(String(20), default="Optimal")
     created_at = Column(DateTime, default=utc_now)
+
+
+class OutboxEvent(Base):
+    __tablename__ = "outbox_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    aggregate_type = Column(String(50), nullable=False)
+    aggregate_id = Column(String(100), nullable=False)
+    event_type = Column(String(100), nullable=False)
+    payload_json = Column(Text, nullable=False)
+    status = Column(String(20), default="PENDING")
+    partition_key = Column(String(100), nullable=True)
+    created_at = Column(DateTime, default=utc_now)
+
