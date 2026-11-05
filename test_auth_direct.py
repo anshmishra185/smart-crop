@@ -29,3 +29,4 @@ res2 = client.post("/api/v1/auth/verify-otp", json={
 })
 print("res2 status:", res2.status_code, flush=True)
 print("res2 json:", res2.json(), flush=True)
+
