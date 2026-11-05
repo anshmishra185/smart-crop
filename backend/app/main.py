@@ -10,7 +10,7 @@ from .migrate import run_db_migrations
 from .middleware.telemetry import CorrelationIdAndTelemetryMiddleware
 from .middleware.rate_limiter import SlidingWindowRateLimiter
 from .ml.disease_detector import disease_detector_model
-from .routers import disease, recommendations, marketplace, mandi
+from .routers import disease, recommendations, marketplace, mandi, auth
 
 # 1. Run Alembic Database Migrations & Ensure Schema Sync
 try:
@@ -130,6 +130,7 @@ app.include_router(disease.router)
 app.include_router(recommendations.router)
 app.include_router(marketplace.router)
 app.include_router(mandi.router)
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 
 @app.get("/api/v1/health")
 def health_check():

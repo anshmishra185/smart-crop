@@ -166,3 +166,42 @@ class MandiRatesResponse(BaseModel):
     updated_at: str
     total_commodities: int
     rates: List[MandiCommodityRate]
+
+
+# Authentication & OTP Schemas
+class OtpRequest(BaseModel):
+    identifier: str = Field(..., json_schema_extra={"example": "+91 98140 23891"}, description="Mobile number (e.g. +91 98140 23891 or 9814023891) or Email ID")
+    channel: str = Field(default="phone", json_schema_extra={"example": "phone"}, description="'phone' or 'email'")
+    purpose: str = Field(default="login", json_schema_extra={"example": "login"}, description="'login' or 'signup'")
+    full_name: Optional[str] = Field(default=None, json_schema_extra={"example": "Sardar Balwinder Singh"})
+    role: Optional[str] = Field(default="farmer", json_schema_extra={"example": "farmer"})
+
+class OtpRequestResponse(BaseModel):
+    success: bool
+    message: str
+    masked_identifier: str
+    channel: str
+    purpose: str
+    dev_otp: Optional[str] = None
+    expires_in_seconds: int = 600
+
+class OtpVerifyRequest(BaseModel):
+    identifier: str = Field(..., json_schema_extra={"example": "+91 98140 23891"})
+    otp_code: str = Field(..., min_length=6, max_length=6, json_schema_extra={"example": "123456"})
+
+class UserAuthProfile(BaseModel):
+    id: int
+    full_name: str
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
+    role: str = "farmer"
+    state: str = "Punjab"
+    district: str = "Ludhiana"
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+class AuthResponse(BaseModel):
+    success: bool
+    message: str
+    token: str
+    user: UserAuthProfile

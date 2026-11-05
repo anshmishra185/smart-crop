@@ -11,7 +11,8 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     full_name = Column(String(120), nullable=False)
-    phone_number = Column(String(20), unique=True, index=True, nullable=False)
+    phone_number = Column(String(20), unique=True, index=True, nullable=True)
+    email = Column(String(120), unique=True, index=True, nullable=True)
     role = Column(String(50), default="farmer")
     state = Column(String(100), default="Punjab")
     district = Column(String(100), default="Ludhiana")
@@ -19,6 +20,21 @@ class User(Base):
 
     listings = relationship("CropListing", back_populates="seller")
     orders = relationship("MandiOrder", back_populates="buyer")
+
+
+class OtpRecord(Base):
+    __tablename__ = "otp_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    identifier = Column(String(120), index=True, nullable=False)  # Phone number or email
+    channel = Column(String(20), nullable=False)  # "phone" or "email"
+    otp_code = Column(String(10), nullable=False)
+    purpose = Column(String(20), default="login")  # "login" or "signup"
+    full_name = Column(String(120), nullable=True)
+    role = Column(String(50), default="farmer")
+    expires_at = Column(DateTime, nullable=False)
+    is_verified = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=utc_now)
 
 
 class CropListing(Base):
