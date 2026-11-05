@@ -223,3 +223,4 @@ def get_ndvi_assessment(
         grid_dimensions={"rows": rows, "cols": cols, "total_pixels": total_cells},
         cells=cells,
     )
+

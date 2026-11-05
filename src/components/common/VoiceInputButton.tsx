@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Mic, MicOff, Loader2 } from 'lucide-react'
+import { Mic } from 'lucide-react'
 import { voiceRecognitionService, type VoiceLanguage } from '../../lib/voiceRecognition'
 import { useAppStore } from '../../store/useAppStore'
 
@@ -87,3 +87,4 @@ export function VoiceInputButton({
     </button>
   )
 }
+

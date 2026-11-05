@@ -170,7 +170,7 @@ class VoiceRecognitionService {
     if (this.recognition && this.state.isListening) {
       try {
         this.recognition.stop()
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -183,3 +183,4 @@ class VoiceRecognitionService {
 }
 
 export const voiceRecognitionService = new VoiceRecognitionService()
+

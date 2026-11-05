@@ -17,6 +17,7 @@ import { useAppStore } from '../store/useAppStore'
 import type { DiseaseDetectionResult } from '../types'
 import { DiagnosticComparisonSlider } from '../components/disease/DiagnosticComparisonSlider'
 import { AudioAdvisoryButton } from '../components/common/AudioAdvisoryButton'
+import { VoiceInputButton } from '../components/common/VoiceInputButton'
 import { getDiseaseAudioNarrative } from '../lib/advisorySpeech'
 import { predictDisease } from '../lib/api'
 import { LiveFieldCameraModal } from '../components/disease/LiveFieldCameraModal'
@@ -42,6 +43,25 @@ export function DiseaseDetectionPage() {
   const [scanStep, setScanStep] = useState<string>('')
   const [scanPercent, setScanPercent] = useState<number>(0)
   const [result, setResult] = useState<DiseaseDetectionResult | null>(lastDiagnosis)
+  const [voiceSymptomNote, setVoiceSymptomNote] = useState<string>('')
+
+  const handleVoiceTranscript = (transcript: string) => {
+    setVoiceSymptomNote(transcript)
+    const lower = transcript.toLowerCase()
+    if (lower.includes('wheat') || lower.includes('ਕਣਕ') || lower.includes('गेहूं')) {
+      setSelectedCrop('Wheat')
+    } else if (lower.includes('rice') || lower.includes('धान') || lower.includes('ਝੋਨਾ') || lower.includes('paddy')) {
+      setSelectedCrop('Rice')
+    } else if (lower.includes('cotton') || lower.includes('कपास') || lower.includes('ਨਰਮਾ')) {
+      setSelectedCrop('Cotton')
+    } else if (lower.includes('potato') || lower.includes('ਆਲੂ') || lower.includes('आलू')) {
+      setSelectedCrop('Potato')
+    } else if (lower.includes('tomato') || lower.includes('ਟਮਾਟਰ') || lower.includes('टमाटर')) {
+      setSelectedCrop('Tomato')
+    } else if (lower.includes('maize') || lower.includes('ਮੱਕੀ') || lower.includes('मक्का')) {
+      setSelectedCrop('Maize')
+    }
+  }
 
   // Drag-and-drop handler
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -277,6 +297,39 @@ export function DiseaseDetectionPage() {
                 <option value="Cotton">Cotton (Gossypium hirsutum)</option>
                 <option value="Maize">Maize (Zea mays)</option>
               </select>
+            </div>
+
+            {/* Pillar 1: Voice-First Speech Symptom Query Engine */}
+            <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3 dark:border-agri-darkBorder dark:bg-agri-darkCard space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-extrabold uppercase tracking-wide text-emerald-800 dark:text-emerald-400">
+                  Voice Symptom Input (ਬੋਲ ਕੇ ਦੱਸੋ / बोलकर बताएं)
+                </span>
+                <VoiceInputButton onTranscript={handleVoiceTranscript} size="sm" />
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={voiceSymptomNote}
+                  onChange={(e) => setVoiceSymptomNote(e.target.value)}
+                  placeholder="Click mic to speak symptoms in Punjabi, Hindi, or English..."
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-500 dark:border-agri-darkBorder dark:bg-agri-darkSurface dark:text-slate-200"
+                />
+                {voiceSymptomNote && (
+                  <button
+                    type="button"
+                    onClick={() => setVoiceSymptomNote('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+              {voiceSymptomNote && (
+                <p className="text-[10px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-semibold">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Spoken Query matched crop: <strong>{selectedCrop}</strong>
+                </p>
+              )}
             </div>
 
             {/* Drag & Drop Area / Preview */}

@@ -97,7 +97,7 @@ def create_mandi_order(
     Supports Idempotency-Key to prevent duplicate procurement charges.
     """
     # 1. Idempotency Check
-    if idempotency_key:
+    if idempotency_key and isinstance(idempotency_key, str):
         existing_order = db.query(MandiOrder).filter(MandiOrder.idempotency_key == idempotency_key).first()
         if existing_order:
             return existing_order
@@ -151,7 +151,7 @@ def create_mandi_order(
         payment_id=payload.payment_id or f"pay_cod_{uuid.uuid4().hex[:8]}",
         payment_status=payment_status,
         tracking_status="ORDER_PLACED",
-        idempotency_key=idempotency_key,
+        idempotency_key=idempotency_key if isinstance(idempotency_key, str) else None,
         qr_delivery_token=qr_token
     )
 
@@ -166,19 +166,8 @@ def create_mandi_order(
     return order
 
 
-@router.post("/webhooks/razorpay", status_code=200)
-async def razorpay_webhook(
-    request: Request,
-    x_razorpay_signature: str = Header(..., alias="X-Razorpay-Signature"),
-    db: Session = Depends(get_db)
-):
-    """
-    Cryptographically verifies Razorpay HMAC-SHA256 webhook signatures
-    and safely advances APMC Escrow to PAYMENT_ESCROW_LOCKED.
-    """
-    body = await request.body()
-    
-    # Compute expected HMAC-SHA256 signature
+def verify_and_process_razorpay_webhook(body: bytes, x_razorpay_signature: str, db: Session) -> dict:
+    """Synchronous verification and processing of Razorpay HMAC-SHA256 signature."""
     expected_sig = hmac.new(
         key=RAZORPAY_WEBHOOK_SECRET.encode(),
         msg=body,
@@ -208,6 +197,20 @@ async def razorpay_webhook(
         return {"status": "success", "event_processed": event}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Webhook payload processing error: {str(e)}")
+
+
+@router.post("/webhooks/razorpay", status_code=200)
+async def razorpay_webhook(
+    request: Request,
+    x_razorpay_signature: str = Header(..., alias="X-Razorpay-Signature"),
+    db: Session = Depends(get_db)
+):
+    """
+    Cryptographically verifies Razorpay HMAC-SHA256 webhook signatures
+    and safely advances APMC Escrow to PAYMENT_ESCROW_LOCKED.
+    """
+    body = await request.body()
+    return verify_and_process_razorpay_webhook(body, x_razorpay_signature, db)
 
 
 @router.post("/orders/{order_number}/release-escrow", response_model=MandiOrderResponse)

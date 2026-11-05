@@ -33,6 +33,7 @@ import { useAppStore } from '../store/useAppStore'
 import { AudioAdvisoryButton } from '../components/common/AudioAdvisoryButton'
 import { getDiseaseAnalyticsAudioNarrative } from '../lib/advisorySpeech'
 import { SporePressureEpidemiology } from '../components/analytics/SporePressureEpidemiology'
+import { SentinelNdviViewer } from '../components/satellite/SentinelNdviViewer'
 import { CadastralDiseaseHeatmap } from '../components/analytics/CadastralDiseaseHeatmap'
 import { FracResistanceTracker } from '../components/analytics/FracResistanceTracker'
 import { EconomicThresholdDamage } from '../components/analytics/EconomicThresholdDamage'
@@ -155,7 +156,10 @@ export function AnalyticsPage() {
         windDirection={weather.windDirection}
       />
 
-      {/* Module 2: Cadastral Disease Outbreak Heatmap & Agro-Climatic Vulnerability Clusters */}
+      {/* Module 2: Space-to-Field Sentinel-2 Multi-Spectral NDVI Health Heatmap */}
+      <SentinelNdviViewer />
+
+      {/* Module 3: Cadastral Disease Outbreak Heatmap & Agro-Climatic Vulnerability Clusters */}
       <CadastralDiseaseHeatmap />
 
       {/* Module 3 & 4: FRAC Chemical Resistance Tracker & Economic Threshold (ETL) Damage */}

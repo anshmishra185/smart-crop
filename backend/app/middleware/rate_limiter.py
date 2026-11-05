@@ -1,24 +1,21 @@
 import os
 import time
+import json
 from collections import defaultdict
-from fastapi import Request
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse
 
-class SlidingWindowRateLimiter(BaseHTTPMiddleware):
+class SlidingWindowRateLimiter:
     """
-    Enterprise Sliding Window Rate Limiter for DDoS & Abuse Prevention.
+    Enterprise Sliding Window Rate Limiter for DDoS & Abuse Prevention (Pure ASGI).
     Supports Redis distributed key-expiry windows when REDIS_URL is configured,
     with automatic zero-dependency in-memory fallback.
     """
     def __init__(self, app, max_requests: int = 60, window_seconds: int = 60):
-        super().__init__(app)
+        self.app = app
         self.max_requests = max_requests
         self.window_seconds = window_seconds
         self.clients = defaultdict(list)
         self.redis_client = None
 
-        # Check for optional Redis connection
         redis_url = os.getenv("REDIS_URL")
         if redis_url:
             try:
@@ -30,28 +27,39 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
                 print(f"[RateLimiter] Redis unavailable ({e}). Using in-memory sliding window.")
                 self.redis_client = None
 
-        # Protect specific compute-intensive or payment endpoints
         self.rate_limited_paths = [
             "/api/v1/predict/disease",
             "/api/v1/marketplace/orders",
             "/api/v1/auth/request-otp"
         ]
 
-    async def dispatch(self, request: Request, call_next):
-        # Only rate limit targeted sensitive endpoints
-        path = request.url.path
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        path = scope.get("path", "")
+        method = scope.get("method", "GET")
         is_sensitive = any(path.startswith(p) for p in self.rate_limited_paths)
 
-        if not is_sensitive or request.method == "OPTIONS":
-            return await call_next(request)
+        if not is_sensitive or method == "OPTIONS":
+            await self.app(scope, receive, send)
+            return
 
-        # Get client IP (support X-Forwarded-For if behind reverse proxy/Cloudflare)
-        forwarded = request.headers.get("X-Forwarded-For")
-        client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "127.0.0.1")
+        headers = dict(scope.get("headers", []))
+        forwarded = headers.get(b"x-forwarded-for")
+        if forwarded:
+            client_ip = forwarded.decode("latin1").split(",")[0].strip()
+        else:
+            client = scope.get("client")
+            client_ip = client[0] if client else "127.0.0.1"
 
         now = time.time()
+        remaining = self.max_requests
+        is_blocked = False
+        retry_after = self.window_seconds
 
-        # 1. Distributed Redis Sliding Window (when available)
+        # 1. Distributed Redis Sliding Window
         if self.redis_client:
             try:
                 key = f"ratelimit:{client_ip}:{path}"
@@ -65,48 +73,53 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
                 current_requests = results[1]
 
                 if current_requests >= self.max_requests:
-                    return JSONResponse(
-                        status_code=429,
-                        content={
-                            "detail": "Too many requests. Rate limit exceeded for sensitive agritech operations.",
-                            "retry_after_seconds": self.window_seconds
-                        },
-                        headers={
-                            "Retry-After": str(self.window_seconds),
-                            "X-RateLimit-Limit": str(self.max_requests),
-                            "X-RateLimit-Remaining": "0"
-                        }
-                    )
-
-                response = await call_next(request)
-                response.headers["X-RateLimit-Limit"] = str(self.max_requests)
-                response.headers["X-RateLimit-Remaining"] = str(max(0, self.max_requests - current_requests - 1))
-                return response
+                    is_blocked = True
+                else:
+                    remaining = max(0, self.max_requests - current_requests - 1)
             except Exception:
-                # If Redis fails mid-operation, gracefully fall through to in-memory
                 pass
 
-        # 2. Resilient In-Memory Sliding Window Fallback
-        client_history = self.clients[client_ip]
-        self.clients[client_ip] = [ts for ts in client_history if now - ts < self.window_seconds]
+        if not self.redis_client or (not is_blocked and remaining == self.max_requests):
+            # 2. In-Memory Sliding Window
+            client_history = self.clients[client_ip]
+            self.clients[client_ip] = [ts for ts in client_history if now - ts < self.window_seconds]
 
-        if len(self.clients[client_ip]) >= self.max_requests:
-            retry_after = int(self.window_seconds - (now - self.clients[client_ip][0]))
-            return JSONResponse(
-                status_code=429,
-                content={
-                    "detail": "Too many requests. Rate limit exceeded for sensitive agritech operations.",
-                    "retry_after_seconds": max(1, retry_after)
-                },
-                headers={
-                    "Retry-After": str(max(1, retry_after)),
-                    "X-RateLimit-Limit": str(self.max_requests),
-                    "X-RateLimit-Remaining": "0"
-                }
-            )
+            if len(self.clients[client_ip]) >= self.max_requests:
+                is_blocked = True
+                retry_after = max(1, int(self.window_seconds - (now - self.clients[client_ip][0])))
+            else:
+                self.clients[client_ip].append(now)
+                remaining = max(0, self.max_requests - len(self.clients[client_ip]))
 
-        self.clients[client_ip].append(now)
-        response = await call_next(request)
-        response.headers["X-RateLimit-Limit"] = str(self.max_requests)
-        response.headers["X-RateLimit-Remaining"] = str(max(0, self.max_requests - len(self.clients[client_ip])))
-        return response
+        if is_blocked:
+            err_body = json.dumps({
+                "detail": "Too many requests. Rate limit exceeded for sensitive agritech operations.",
+                "retry_after_seconds": retry_after
+            }).encode("utf-8")
+            await send({
+                "type": "http.response.start",
+                "status": 429,
+                "headers": [
+                    (b"content-type", b"application/json"),
+                    (b"retry-after", str(retry_after).encode("ascii")),
+                    (b"x-ratelimit-limit", str(self.max_requests).encode("ascii")),
+                    (b"x-ratelimit-remaining", b"0"),
+                    (b"content-length", str(len(err_body)).encode("ascii")),
+                ]
+            })
+            await send({
+                "type": "http.response.body",
+                "body": err_body,
+                "more_body": False
+            })
+            return
+
+        async def send_wrapper(message):
+            if message["type"] == "http.response.start":
+                res_headers = list(message.get("headers", []))
+                res_headers.append((b"x-ratelimit-limit", str(self.max_requests).encode("ascii")))
+                res_headers.append((b"x-ratelimit-remaining", str(remaining).encode("ascii")))
+                message["headers"] = res_headers
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)

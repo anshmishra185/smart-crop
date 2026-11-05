@@ -87,3 +87,4 @@ volumes:
 networks:
   agri_network:
     driver: bridge
+

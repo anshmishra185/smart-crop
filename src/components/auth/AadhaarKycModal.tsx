@@ -6,7 +6,6 @@ import {
   Lock,
   ArrowRight,
   Sparkles,
-  Building2,
   FileCheck2
 } from 'lucide-react'
 import { useAuth } from '../../auth/useAuth'
@@ -235,3 +234,4 @@ export function AadhaarKycModal({ isOpen, onClose }: AadhaarKycModalProps) {
     </div>
   )
 }
+

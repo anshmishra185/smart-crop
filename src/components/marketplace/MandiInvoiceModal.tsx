@@ -107,7 +107,7 @@ Delivery Handshake OTP: ${order.deliveryOtp}`
                 <div className="text-right">
                   <span className="text-[10px] uppercase font-bold text-slate-400">Seller / Farmer</span>
                   <p className="font-bold text-emerald-400">{order.farmerName}</p>
-                  <p className="text-slate-400">{order.farmerDistrict}, Punjab</p>
+                  <p className="text-slate-400">{order.farmerLocation || 'Punjab'}</p>
                 </div>
               </div>
 
