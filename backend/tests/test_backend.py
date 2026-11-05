@@ -360,4 +360,147 @@ def test_sentinel2_satellite_ndvi_pipeline():
     assert abs(calculated_ndvi - first_cell.ndvi) < 0.001
 
 
+# 16. Transactional Outbox Pattern & Event Backbone Dispatcher
+def test_transactional_outbox_dispatch():
+    from backend.app.models import OutboxEvent
+    from backend.app.events.outbox_worker import dispatch_pending_outbox_events
+    from backend.app.events.kafka_producer import event_publisher
+    db = SessionLocal()
+    try:
+        # Create synthetic outbox event
+        test_event = OutboxEvent(
+            aggregate_type="MandiOrder",
+            aggregate_id=f"TEST-ORD-{uuid.uuid4().hex[:6]}",
+            event_type="mandi.procurement.order.created",
+            payload_json=json.dumps({"test": True, "amount": 50000}),
+            status="PENDING",
+            partition_key="Khanna Mandi"
+        )
+        db.add(test_event)
+        db.commit()
+
+        # Run outbox worker
+        dispatched = dispatch_pending_outbox_events(db=db)
+        assert dispatched >= 1
+
+        # Check DB state updated to PUBLISHED
+        db.refresh(test_event)
+        assert test_event.status == "PUBLISHED"
+
+        # Check in-memory event publisher received the event
+        assert len(event_publisher.published_events) > 0
+    finally:
+        db.close()
+
+
+# 17. Pluggable KYC Providers & AES-256 Envelope Encryption
+def test_kyc_providers_and_envelope_encryption():
+    from backend.app.services.kyc_provider import (
+        SandboxKycProvider,
+        ProductionDigiLockerProvider,
+        envelope_encryption
+    )
+
+    # Test Sandbox Provider
+    sandbox = SandboxKycProvider()
+    res1 = sandbox.verify_aadhaar("5489 1234 3891", "123456", "Balwinder Singh")
+    assert res1["success"] is True
+    assert res1["masked_aadhaar"] == "XXXX-XXXX-3891"
+
+    # Test Production DigiLocker Provider (Cryptographic Signature Verification)
+    digilocker = ProductionDigiLockerProvider()
+    res2 = digilocker.verify_aadhaar("5489 1234 3891", "654321", "Balwinder Singh")
+    assert res2["success"] is True
+    assert "CCA-INDIA-" in res2["cert_serial"]
+
+    # Test AES-256-GCM Envelope Encryption & Authenticated Decryption
+    secret_aadhaar = "548912343891"
+    cipher_token = envelope_encryption.encrypt(secret_aadhaar)
+    assert cipher_token != secret_aadhaar
+    decrypted = envelope_encryption.decrypt(cipher_token)
+    assert decrypted == secret_aadhaar
+
+
+# 18. Razorpay Route Split Calculation (98.5% Farmer / 1.5% APMC Cess)
+def test_razorpay_route_splits():
+    from backend.app.routers.marketplace import create_mandi_order
+    from backend.app.schemas import MandiOrderCreate
+    from backend.app.models import OutboxEvent
+    db = SessionLocal()
+    try:
+        payload = MandiOrderCreate(
+            buyer_name="Adani Agri Logistics Hub",
+            buyer_phone="+91 98888 11223",
+            delivery_address="Mandi Yard Silo 4, Ludhiana",
+            pin_code="141001",
+            quantity_quintals=100.0,
+            payment_mode="RAZORPAY"
+        )
+        order = create_mandi_order(payload=payload, db=db)
+        
+        # Verify outbox event contains 98.5% direct farmer split
+        event = db.query(OutboxEvent).filter(OutboxEvent.aggregate_id == order.order_number).first()
+        assert event is not None
+        data = json.loads(event.payload_json)
+        splits = data["razorpay_route_splits"]
+        total = data["total_amount_inr"]
+        assert splits["farmer_bank_account_inr"] == round(total * 0.985, 2)
+        assert splits["apmc_mandi_cess_inr"] == round(total * 0.015, 2)
+    finally:
+        db.close()
+
+
+# 19. Webhook Anti-Replay Protection (Timestamp & Nonce)
+def test_webhook_anti_replay_protection():
+    import hmac, hashlib
+    from backend.app.routers.marketplace import verify_and_process_razorpay_webhook, RAZORPAY_WEBHOOK_SECRET
+    from fastapi import HTTPException
+    db = SessionLocal()
+    try:
+        # Replay attack with timestamp older than 300 seconds
+        old_epoch = 1500000000  # Year 2017
+        body = json.dumps({
+            "id": "evt_replay_attack_001",
+            "event": "payment.captured",
+            "created_at": old_epoch,
+            "payload": {"payment": {"entity": {"id": "pay_replay_001", "amount": 1000}}}
+        }).encode("utf-8")
+        sig = hmac.new(RAZORPAY_WEBHOOK_SECRET.encode(), body, hashlib.sha256).hexdigest()
+
+        with pytest.raises(HTTPException) as excinfo:
+            verify_and_process_razorpay_webhook(body, sig, db)
+        assert excinfo.value.status_code == 400
+        assert "Anti-Replay" in excinfo.value.detail
+    finally:
+        db.close()
+
+
+# 20. Circuit Breaker Fast-Fail & Prometheus Metrics SLIs
+def test_circuit_breaker_and_prometheus_metrics():
+    from backend.app.services.circuit_breaker import CircuitBreaker, CircuitBreakerOpenException
+    from backend.app.main import prometheus_metrics
+
+    # Test Circuit Breaker
+    cb = CircuitBreaker(failure_threshold=2, recovery_timeout_seconds=10)
+    def fail_fn():
+        raise ConnectionError("APMC Mandi Gateway Timeout")
+
+    with pytest.raises(ConnectionError):
+        cb.execute(fail_fn)
+    with pytest.raises(ConnectionError):
+        cb.execute(fail_fn)
+
+    # Third call should immediately fast-fail with CircuitBreakerOpenException
+    with pytest.raises(CircuitBreakerOpenException):
+        cb.execute(fail_fn)
+    assert cb.state == "OPEN"
+
+    # Test Prometheus Metrics Endpoint
+    metrics_str = prometheus_metrics()
+    assert "krishi_saarthi_http_requests_total" in metrics_str
+    assert "krishi_saarthi_inference_duration_seconds" in metrics_str
+    assert "krishi_saarthi_escrow_settled_amount_inr" in metrics_str
+
+
+
 
