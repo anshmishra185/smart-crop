@@ -277,3 +277,72 @@ def test_database_persistence():
         assert assessment_count > 0
     finally:
         db.close()
+
+
+# 11. Mobile Number & Email OTP Request Authentication
+@pytest.mark.anyio
+async def test_otp_request_and_verification_flow():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Step 1: Request Mobile OTP for Login/Signup
+        phone_req = {
+            "identifier": "+91 98140 23891",
+            "channel": "phone",
+            "purpose": "signup",
+            "full_name": "Sardar Balwinder Singh Dhillon",
+            "role": "farmer"
+        }
+        res1 = await client.post("/api/v1/auth/request-otp", json=phone_req)
+        assert res1.status_code == 200
+        data1 = res1.json()
+        assert data1["success"] is True
+        assert "OTP successfully sent" in data1["message"]
+        assert "+91 ******3891" in data1["masked_identifier"]
+        dev_otp = data1["dev_otp"]
+        assert len(dev_otp) == 6
+
+        # Step 2: Verify with correct OTP
+        verify_req = {
+            "identifier": "+91 98140 23891",
+            "otp_code": dev_otp
+        }
+        res2 = await client.post("/api/v1/auth/verify-otp", json=verify_req)
+        assert res2.status_code == 200
+        data2 = res2.json()
+        assert data2["success"] is True
+        assert "token" in data2
+        assert data2["user"]["phone_number"] == "+91 98140 23891"
+        assert data2["user"]["role"] == "farmer"
+
+        # Step 3: Test Email OTP Flow
+        email_req = {
+            "identifier": "farmer.gurpreet@punjabagri.in",
+            "channel": "email",
+            "purpose": "login",
+            "full_name": "Gurpreet Kaur"
+        }
+        res3 = await client.post("/api/v1/auth/request-otp", json=email_req)
+        assert res3.status_code == 200
+        data3 = res3.json()
+        email_otp = data3["dev_otp"]
+
+        res4 = await client.post(
+            "/api/v1/auth/verify-otp",
+            json={"identifier": "farmer.gurpreet@punjabagri.in", "otp_code": email_otp}
+        )
+        assert res4.status_code == 200
+        assert res4.json()["user"]["email"] == "farmer.gurpreet@punjabagri.in"
+
+
+# 12. Rejection of Invalid or Forged OTP
+@pytest.mark.anyio
+async def test_rejection_of_invalid_otp():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        bad_verify = {
+            "identifier": "+91 99999 11111",
+            "otp_code": "000000"
+        }
+        res = await client.post("/api/v1/auth/verify-otp", json=bad_verify)
+        assert res.status_code == 400
+        assert "Invalid or expired OTP" in res.json()["detail"]

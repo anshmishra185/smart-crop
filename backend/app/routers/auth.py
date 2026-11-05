@@ -94,14 +94,11 @@ def request_otp(payload: OtpRequest, db: Session = Depends(get_db)):
 
     masked = mask_identifier(normalized_id, channel)
 
-    # High-visibility terminal telemetry for local development / testing / hackathon judging
-    print("\n" + "=" * 65)
-    print(f"🌾 [KRISHI SAARTHI OTP SERVICE] - One-Time Password Generated")
-    print(f"📡 Channel:    {channel.upper()}")
-    print(f"👤 Target:     {normalized_id} ({masked})")
-    print(f"🔑 OTP Code:   {otp_code}  (Valid for 10 minutes)")
-    print(f"🎯 Purpose:    {payload.purpose.upper()}")
-    print("=" * 65 + "\n")
+    # Terminal telemetry for local development / testing / hackathon judging
+    try:
+        print(f"[KRISHI SAARTHI OTP SERVICE] Channel: {channel.upper()} | Target: {normalized_id} | OTP: {otp_code} | Purpose: {payload.purpose.upper()}")
+    except Exception:
+        pass
 
     return OtpRequestResponse(
         success=True,

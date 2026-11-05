@@ -12,14 +12,15 @@ from .middleware.rate_limiter import SlidingWindowRateLimiter
 from .ml.disease_detector import disease_detector_model
 from .routers import disease, recommendations, marketplace, mandi, auth
 
-# 1. Run Alembic Database Migrations & Ensure Schema Sync
-try:
-    run_db_migrations()
-except Exception as e:
-    pass
-
-# Ensure tables exist as safe baseline
+# 1. Ensure tables exist as safe baseline
 Base.metadata.create_all(bind=engine)
+
+# 2. Run Alembic Database Migrations when in production PostgreSQL environment
+if "postgresql" in DATABASE_URL:
+    try:
+        run_db_migrations()
+    except Exception as e:
+        pass
 
 # 2. Seed initial benchmark crop listings if empty
 def seed_initial_data():
