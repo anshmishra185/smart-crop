@@ -10,7 +10,7 @@ from .migrate import run_db_migrations
 from .middleware.telemetry import CorrelationIdAndTelemetryMiddleware
 from .middleware.rate_limiter import SlidingWindowRateLimiter
 from .ml.disease_detector import disease_detector_model
-from .routers import disease, recommendations, marketplace, mandi, auth
+from .routers import disease, recommendations, marketplace, mandi, auth, satellite
 
 # 1. Ensure tables exist as safe baseline
 Base.metadata.create_all(bind=engine)
@@ -132,6 +132,7 @@ app.include_router(recommendations.router)
 app.include_router(marketplace.router)
 app.include_router(mandi.router)
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(satellite.router)
 
 @app.get("/api/v1/health")
 def health_check():

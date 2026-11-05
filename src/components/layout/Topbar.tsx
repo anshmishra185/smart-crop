@@ -29,6 +29,8 @@ import { supportedLanguages } from '../../lib/translations'
 import { PUNJAB_DISTRICT_COORDINATES } from '../../data/punjabDistricts'
 import { AnimatedBrandLogo } from '../common/AnimatedBrandLogo'
 import { OfflineSyncSentinel } from '../common/OfflineSyncSentinel'
+import { VoiceInputButton } from '../common/VoiceInputButton'
+import { AadhaarKycModal } from '../auth/AadhaarKycModal'
 
 interface TopbarProps {
   onOpenMobileSidebar: () => void
@@ -56,6 +58,7 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
   const [notifOpen, setNotifOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -191,20 +194,29 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
           <Menu className="h-5 w-5" />
         </button>
 
-        {/* Global Search Pill / Trigger */}
-        <button
-          type="button"
-          onClick={() => setSearchOpen(true)}
-          className="group flex h-9.5 w-44 sm:w-64 md:w-80 items-center justify-between rounded-xl border border-slate-200/90 bg-slate-50/80 px-3.5 text-xs text-slate-500 shadow-sm transition-all hover:border-emerald-300 hover:bg-white dark:border-agri-darkBorder dark:bg-agri-darkCard dark:text-slate-400 dark:hover:border-emerald-500"
-        >
-          <div className="flex items-center gap-2 truncate">
-            <Search className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400" />
-            <span className="truncate">Search disease, crops, weather...</span>
-          </div>
-          <kbd className="hidden rounded bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-agri-darkBorder dark:text-slate-400 sm:inline-block">
-            ⌘K
-          </kbd>
-        </button>
+        {/* Global Search Pill & Voice Input */}
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="group flex h-9.5 w-40 sm:w-60 md:w-72 items-center justify-between rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 text-xs text-slate-500 shadow-sm transition-all hover:border-emerald-300 hover:bg-white dark:border-agri-darkBorder dark:bg-agri-darkCard dark:text-slate-400 dark:hover:border-emerald-500"
+          >
+            <div className="flex items-center gap-2 truncate">
+              <Search className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400" />
+              <span className="truncate">Search crops, weather...</span>
+            </div>
+            <kbd className="hidden rounded bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-agri-darkBorder dark:text-slate-400 sm:inline-block">
+              ⌘K
+            </kbd>
+          </button>
+          <VoiceInputButton
+            onTranscript={(spoken) => {
+              setSearchQuery(spoken)
+              setSearchOpen(true)
+            }}
+            size="md"
+          />
+        </div>
 
         {/* Region selector */}
         <div className="hidden items-center gap-1.5 rounded-xl border border-slate-200/80 bg-slate-50/80 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:border-agri-darkBorder dark:bg-agri-darkCard dark:text-slate-300 md:flex">
@@ -478,6 +490,16 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
                     type="button"
                     onClick={() => {
                       setUserOpen(false)
+                      setIsKycModalOpen(true)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40 transition-colors"
+                  >
+                    <ShieldCheck className="h-4 w-4 text-emerald-600" /> Aadhaar e-KYC Badge
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserOpen(false)
                       void signOut()
                     }}
                     className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40 transition-colors"
@@ -519,6 +541,10 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
                 placeholder="Search modules, 23 Punjab districts, or actions..."
                 className="w-full bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
                 autoFocus
+              />
+              <VoiceInputButton
+                onTranscript={(spoken) => setSearchQuery(spoken)}
+                size="sm"
               />
               <button
                 type="button"
@@ -682,6 +708,12 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
           </div>
         </div>
       )}
+
+      {/* Voluntary Aadhaar e-KYC Modal */}
+      <AadhaarKycModal
+        isOpen={isKycModalOpen}
+        onClose={() => setIsKycModalOpen(false)}
+      />
     </header>
   )
 }

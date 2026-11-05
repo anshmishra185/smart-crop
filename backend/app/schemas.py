@@ -197,6 +197,8 @@ class UserAuthProfile(BaseModel):
     role: str = "farmer"
     state: str = "Punjab"
     district: str = "Ludhiana"
+    is_kyc_verified: bool = False
+    aadhaar_masked_hash: Optional[str] = None
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
@@ -205,3 +207,76 @@ class AuthResponse(BaseModel):
     message: str
     token: str
     user: UserAuthProfile
+
+
+# Aadhaar e-KYC Sandbox Schemas
+class AadhaarKycRequest(BaseModel):
+    aadhaar_number: str = Field(..., json_schema_extra={"example": "5489 1234 3891"}, description="12-digit Aadhaar Number")
+    otp_code: str = Field(..., min_length=6, max_length=6, json_schema_extra={"example": "123456"}, description="6-digit UIDAI verification OTP")
+    full_name: Optional[str] = Field(None, json_schema_extra={"example": "Sardar Balwinder Singh Dhillon"})
+
+class AadhaarKycResponse(BaseModel):
+    success: bool
+    message: str
+    is_kyc_verified: bool
+    aadhaar_masked_hash: str
+    verification_id: str
+    verified_at: str
+    user: UserAuthProfile
+
+
+# e-NAM Mandi Digital Gate Pass Schemas
+class EnamGatePassResponse(BaseModel):
+    gatepass_number: str
+    order_number: str
+    mandi_code: str
+    mandi_name: str
+    state: str
+    commodity: str
+    variety: str
+    quality_grade: str
+    moisture_percentage: float
+    net_quantity_quintals: float
+    total_value_inr: float
+    seller_name: str
+    seller_aadhaar_hash: Optional[str] = None
+    buyer_name: str
+    vehicle_number: str
+    gate_entry_timestamp: str
+    qr_verification_token: str
+    escrow_clearance_status: str
+    generated_at: str
+
+
+# Sentinel-2 Satellite Earth Observation Schemas
+class SatelliteNdviCell(BaseModel):
+    row: int
+    col: int
+    lat: float
+    lon: float
+    nir_band8: float
+    red_band4: float
+    ndvi: float
+    classification: str
+    foliar_stress_days_advance: int
+    color_hex: str
+
+
+class SatelliteNdviResponse(BaseModel):
+    cluster: str
+    state: str
+    satellite_mission: str
+    sensor: str
+    acquisition_date: str
+    cloud_coverage_percentage: float
+    grid_resolution: str
+    total_area_hectares: float
+    average_ndvi: float
+    pre_symptomatic_alert: str
+    healthy_canopy_percentage: float
+    stressed_canopy_percentage: float
+    critical_canopy_percentage: float
+    spectral_indices: dict
+    grid_dimensions: dict
+    cells: list[SatelliteNdviCell]
+

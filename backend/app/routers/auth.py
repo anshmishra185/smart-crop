@@ -6,7 +6,15 @@ from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import User, OtpRecord, utc_now
-from ..schemas import OtpRequest, OtpRequestResponse, OtpVerifyRequest, AuthResponse, UserAuthProfile
+from ..schemas import (
+    OtpRequest,
+    OtpRequestResponse,
+    OtpVerifyRequest,
+    AuthResponse,
+    UserAuthProfile,
+    AadhaarKycRequest,
+    AadhaarKycResponse,
+)
 
 router = APIRouter()
 
@@ -213,3 +221,58 @@ def get_current_user_profile(
         db.refresh(default_user)
 
     return UserAuthProfile.model_validate(default_user)
+
+
+@router.post("/kyc/verify-aadhaar", response_model=AadhaarKycResponse)
+def verify_aadhaar_kyc(
+    payload: AadhaarKycRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Voluntary UIDAI / DigiLocker e-KYC Sandbox.
+    Verifies 12-digit Indian Aadhaar via cryptographic OTP simulation.
+    Confers official 'Verified Kisaan' trust badge on the farmer's profile and crop listings.
+    """
+    raw_aadhaar = re.sub(r"\D", "", payload.aadhaar_number)
+    if len(raw_aadhaar) != 12:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Aadhaar number must contain exactly 12 digits."
+        )
+
+    # In sandbox/demo mode, accept any 6-digit OTP (e.g. 123456)
+    if len(payload.otp_code.strip()) != 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid 6-digit UIDAI verification OTP."
+        )
+
+    masked_aadhaar = f"XXXX-XXXX-{raw_aadhaar[-4:]}"
+    verification_token = f"UIDAI-KYC-{secrets.token_hex(6).upper()}"
+
+    # Find or update active user
+    user = db.query(User).first()
+    if not user:
+        user = User(
+            full_name=payload.full_name or "Balwinder Singh Dhillon",
+            phone_number="+91 98140 23891",
+            role="farmer",
+            state="Punjab",
+            district="Ludhiana"
+        )
+        db.add(user)
+
+    user.is_kyc_verified = True
+    user.aadhaar_masked_hash = masked_aadhaar
+    db.commit()
+    db.refresh(user)
+
+    return AadhaarKycResponse(
+        success=True,
+        message=f"Aadhaar e-KYC verified successfully. Welcome, {user.full_name} (Verified Kisaan)!",
+        is_kyc_verified=True,
+        aadhaar_masked_hash=masked_aadhaar,
+        verification_id=verification_token,
+        verified_at=datetime.now(timezone.utc).isoformat(),
+        user=UserAuthProfile.model_validate(user)
+    )

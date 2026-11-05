@@ -1,0 +1,89 @@
+services:
+  # 1. FastAPI + ONNX Vision Deep Learning Microservice
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: krishi_saarthi_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://agriuser:agrisecret@db:5432/krishi_saarthi_prod
+      - REDIS_URL=redis://redis:6379/0
+      - RAZORPAY_WEBHOOK_SECRET=whsec_krishi_saarthi_prod_mock_key
+      - PORT=8000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    networks:
+      - agri_network
+
+  # 2. Redis High-Throughput Sliding-Window Cache & Tickers
+  redis:
+    image: redis:7-alpine
+    container_name: krishi_saarthi_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - agri_network
+
+  # 3. Production Cloud PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: krishi_saarthi_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=agriuser
+      - POSTGRES_PASSWORD=agrisecret
+      - POSTGRES_DB=krishi_saarthi_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agriuser -d krishi_saarthi_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agri_network
+
+  # 4. Nginx Reverse Proxy & Static Asset Gateway
+  frontend:
+    image: nginx:alpine
+    container_name: krishi_saarthi_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - agri_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  agri_network:
+    driver: bridge

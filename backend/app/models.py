@@ -16,6 +16,8 @@ class User(Base):
     role = Column(String(50), default="farmer")
     state = Column(String(100), default="Punjab")
     district = Column(String(100), default="Ludhiana")
+    is_kyc_verified = Column(Boolean, default=False)
+    aadhaar_masked_hash = Column(String(50), nullable=True)
     created_at = Column(DateTime, default=utc_now)
 
     listings = relationship("CropListing", back_populates="seller")

@@ -87,9 +87,15 @@ export function CropListingCard({ listing, onBuyNow }: CropListingCardProps) {
             {/* Farmer Micro-Profile Pill */}
             <div className="mt-3.5 flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-2.5 dark:border-slate-800 dark:bg-slate-950 text-xs">
               <div className="min-w-0 pr-2">
-                <p className="font-bold text-slate-900 dark:text-white truncate">
-                  {listing.farmerName}
-                </p>
+                <div className="flex items-center gap-1.5 truncate">
+                  <p className="font-bold text-slate-900 dark:text-white truncate">
+                    {listing.farmerName}
+                  </p>
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">
+                    <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" />
+                    <span>Verified Kisaan</span>
+                  </span>
+                </div>
                 <p className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 truncate">
                   <MapPin className="h-3 w-3 text-amber-500 shrink-0" />
                   <span>

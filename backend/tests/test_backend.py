@@ -280,75 +280,135 @@ def test_database_persistence():
 
 
 # 11. Mobile Number & Email OTP Request Authentication
-def test_otp_request_and_verification_flow():
-    import asyncio
-    async def _run():
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-            # Step 1: Request Mobile OTP for Login/Signup
-            phone_req = {
-                "identifier": "+91 98140 23891",
-                "channel": "phone",
-                "purpose": "signup",
-                "full_name": "Sardar Balwinder Singh Dhillon",
-                "role": "farmer"
-            }
-            res1 = await client.post("/api/v1/auth/request-otp", json=phone_req)
-            assert res1.status_code == 200
-            data1 = res1.json()
-            assert data1["success"] is True
-            assert "OTP successfully sent" in data1["message"]
-            assert "+91 ******3891" in data1["masked_identifier"]
-            dev_otp = data1["dev_otp"]
-            assert len(dev_otp) == 6
+@pytest.mark.anyio
+async def test_otp_request_and_verification_flow():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Step 1: Request Mobile OTP for Login/Signup
+        phone_req = {
+            "identifier": "+91 98140 23891",
+            "channel": "phone",
+            "purpose": "signup",
+            "full_name": "Sardar Balwinder Singh Dhillon",
+            "role": "farmer"
+        }
+        res1 = await client.post("/api/v1/auth/request-otp", json=phone_req)
+        assert res1.status_code == 200
+        data1 = res1.json()
+        assert data1["success"] is True
+        assert "OTP successfully sent" in data1["message"]
+        assert "+91 ******3891" in data1["masked_identifier"]
+        dev_otp = data1["dev_otp"]
+        assert len(dev_otp) == 6
 
-            # Step 2: Verify with correct OTP
-            verify_req = {
-                "identifier": "+91 98140 23891",
-                "otp_code": dev_otp
-            }
-            res2 = await client.post("/api/v1/auth/verify-otp", json=verify_req)
-            assert res2.status_code == 200
-            data2 = res2.json()
-            assert data2["success"] is True
-            assert "token" in data2
-            assert data2["user"]["phone_number"] == "+91 98140 23891"
-            assert data2["user"]["role"] == "farmer"
+        # Step 2: Verify with correct OTP
+        verify_req = {
+            "identifier": "+91 98140 23891",
+            "otp_code": dev_otp
+        }
+        res2 = await client.post("/api/v1/auth/verify-otp", json=verify_req)
+        assert res2.status_code == 200
+        data2 = res2.json()
+        assert data2["success"] is True
+        assert "token" in data2
+        assert data2["user"]["phone_number"] == "+91 98140 23891"
+        assert data2["user"]["role"] == "farmer"
 
-            # Step 3: Test Email OTP Flow
-            email_req = {
-                "identifier": "farmer.gurpreet@punjabagri.in",
-                "channel": "email",
-                "purpose": "login",
-                "full_name": "Gurpreet Kaur"
-            }
-            res3 = await client.post("/api/v1/auth/request-otp", json=email_req)
-            assert res3.status_code == 200
-            data3 = res3.json()
-            email_otp = data3["dev_otp"]
+        # Step 3: Test Email OTP Flow
+        email_req = {
+            "identifier": "farmer.gurpreet@punjabagri.in",
+            "channel": "email",
+            "purpose": "login",
+            "full_name": "Gurpreet Kaur"
+        }
+        res3 = await client.post("/api/v1/auth/request-otp", json=email_req)
+        assert res3.status_code == 200
+        data3 = res3.json()
+        email_otp = data3["dev_otp"]
 
-            res4 = await client.post(
-                "/api/v1/auth/verify-otp",
-                json={"identifier": "farmer.gurpreet@punjabagri.in", "otp_code": email_otp}
-            )
-            assert res4.status_code == 200
-            assert res4.json()["user"]["email"] == "farmer.gurpreet@punjabagri.in"
-
-    asyncio.run(_run())
+        res4 = await client.post(
+            "/api/v1/auth/verify-otp",
+            json={"identifier": "farmer.gurpreet@punjabagri.in", "otp_code": email_otp}
+        )
+        assert res4.status_code == 200
+        assert res4.json()["user"]["email"] == "farmer.gurpreet@punjabagri.in"
 
 
 # 12. Rejection of Invalid or Forged OTP
-def test_rejection_of_invalid_otp():
-    import asyncio
-    async def _run():
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-            bad_verify = {
-                "identifier": "+91 99999 11111",
-                "otp_code": "000000"
-            }
-            res = await client.post("/api/v1/auth/verify-otp", json=bad_verify)
-            assert res.status_code == 400
-            assert "Invalid or expired OTP" in res.json()["detail"]
+@pytest.mark.anyio
+async def test_rejection_of_invalid_otp():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        bad_verify = {
+            "identifier": "+91 99999 11111",
+            "otp_code": "000000"
+        }
+        res = await client.post("/api/v1/auth/verify-otp", json=bad_verify)
+        assert res.status_code == 400
+        assert "Invalid or expired OTP" in res.json()["detail"]
 
-    asyncio.run(_run())
+
+# 13. Aadhaar e-KYC Verification Sandbox Flow
+@pytest.mark.anyio
+async def test_aadhaar_kyc_verification_flow():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        kyc_payload = {
+            "aadhaar_number": "5489 1234 3891",
+            "otp_code": "123456",
+            "full_name": "Sardar Balwinder Singh Dhillon"
+        }
+        res = await client.post("/api/v1/auth/kyc/verify-aadhaar", json=kyc_payload)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["success"] is True
+        assert data["is_kyc_verified"] is True
+        assert "3891" in data["aadhaar_masked_hash"]
+        assert data["user"]["is_kyc_verified"] is True
+
+
+# 14. e-NAM APMC Digital Gate Pass Generation
+@pytest.mark.anyio
+async def test_enam_gatepass_generation():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Query the gatepass for an existing seeded order (e.g. KS-ORD-9012)
+        res = await client.get("/api/v1/marketplace/orders/KS-ORD-9012/enam-gatepass")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["gatepass_number"].startswith("ENAM-GP-")
+        assert data["order_number"] == "KS-ORD-9012"
+        assert "QR-ENAM" in data["qr_verification_token"]
+        assert data["moisture_percentage"] > 0
+        assert data["net_quantity_quintals"] > 0
+
+
+# 15. Sentinel-2 Satellite Multi-Spectral NDVI Assessment Pipeline
+@pytest.mark.anyio
+async def test_sentinel2_satellite_ndvi_pipeline():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Test cluster list
+        clusters_res = await client.get("/api/v1/satellite/clusters")
+        assert clusters_res.status_code == 200
+        clusters = clusters_res.json()
+        assert len(clusters) >= 4
+        assert any(c["id"] == "ludhiana" for c in clusters)
+
+        # Test NDVI Assessment for Ludhiana
+        ndvi_res = await client.get("/api/v1/satellite/ndvi-assessment?cluster=Ludhiana&grid_resolution=10m")
+        assert ndvi_res.status_code == 200
+        data = ndvi_res.json()
+        assert "Sentinel-2" in data["satellite_mission"]
+        assert data["average_ndvi"] > 0
+        assert "Foliar stress" in data["pre_symptomatic_alert"] or "Canopy biomass" in data["pre_symptomatic_alert"]
+        assert len(data["cells"]) == 36  # 6x6 grid
+        first_cell = data["cells"][0]
+        assert "nir_band8" in first_cell
+        assert "red_band4" in first_cell
+        assert "ndvi" in first_cell
+        # Check NDVI formula consistency: (NIR - RED) / (NIR + RED)
+        calculated_ndvi = round((first_cell["nir_band8"] - first_cell["red_band4"]) / (first_cell["nir_band8"] + first_cell["red_band4"]), 4)
+        assert abs(calculated_ndvi - first_cell["ndvi"]) < 0.001
+
+
