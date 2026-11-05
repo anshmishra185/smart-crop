@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { FieldActionDock } from '../common/FieldActionDock'
+import { AuthModal } from '../auth/AuthModal'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -43,9 +44,10 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Global Floating Field Action Dock */}
         <FieldActionDock />
+
+        {/* Global Mobile & Email OTP Authentication Modal */}
+        <AuthModal />
       </div>
     </div>
   )
 }
-
-

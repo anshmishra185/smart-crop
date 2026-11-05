@@ -10,8 +10,7 @@ import {
   RotateCw,
   CheckCircle2,
   Lock,
-  User,
-  Check
+  User
 } from 'lucide-react'
 import { useAuth } from '../../auth/useAuth'
 import { isGoogleConfigured } from '../../lib/googleAuth'
