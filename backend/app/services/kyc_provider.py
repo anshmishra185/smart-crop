@@ -121,3 +121,4 @@ def get_kyc_provider() -> KycProviderInterface:
     if mode == "PRODUCTION":
         return ProductionDigiLockerProvider()
     return SandboxKycProvider()
+

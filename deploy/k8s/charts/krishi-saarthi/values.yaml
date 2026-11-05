@@ -114,3 +114,4 @@ podDisruptionBudget:
 
 networkPolicy:
   enabled: true
+

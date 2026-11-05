@@ -224,3 +224,26 @@ def get_ndvi_assessment(
         cells=cells,
     )
 
+
+@router.get("/copernicus/process-envelope")
+async def process_copernicus_envelope(
+    min_lon: float = Query(75.80, description="Bounding box minimum longitude"),
+    min_lat: float = Query(30.85, description="Bounding box minimum latitude"),
+    max_lon: float = Query(75.92, description="Bounding box maximum longitude"),
+    max_lat: float = Query(30.95, description="Bounding box maximum latitude"),
+    cluster_name: str = Query("Ludhiana Agro Cluster", description="Target cadastral cluster name")
+):
+    """
+    Direct ESA Copernicus Sentinel-2 Level-2A Process API ingestion.
+    Fetches 10m native pixel orthorectified reflectances with Scene Classification Layer (SCL) cloud masking.
+    """
+    from ..services.satellite_pipeline import copernicus_pipeline
+    return await copernicus_pipeline.process_field_envelope(
+        min_lon=min_lon,
+        min_lat=min_lat,
+        max_lon=max_lon,
+        max_lat=max_lat,
+        cluster_name=cluster_name
+    )
+
+

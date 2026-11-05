@@ -502,5 +502,121 @@ def test_circuit_breaker_and_prometheus_metrics():
     assert "krishi_saarthi_escrow_settled_amount_inr" in metrics_str
 
 
+# 21. Banking Gateway: Penny Drop & Razorpay Route Split (98.5% Farmer / 1.5% APMC)
+def test_banking_gateway_route_split_and_penny_drop():
+    from backend.app.services.banking_gateway import banking_gateway
+
+    # Test Penny Drop verification
+    penny_res = banking_gateway.verify_bank_account_penny_drop(
+        account_number="50100234567890",
+        ifsc_code="HDFC0000123",
+        expected_farmer_name="Gurpreet Singh"
+    )
+    assert penny_res.status == "VERIFIED"
+    assert penny_res.name_match_score >= 0.95
+    assert penny_res.bank_name == "HDFC Bank Ltd"
+    assert "HDFC0000123" in penny_res.ifsc_code
+
+    # Test Dual Route Split Settlement
+    route_split = banking_gateway.calculate_route_splits(total_amount_inr=100000.0)
+    assert route_split["farmer_direct_payout_inr"] == 98500.0  # 98.5%
+    assert route_split["apmc_mandi_cess_inr"] == 1500.0        # 1.5%
+
+    # Test Dynamic UPI Intent
+    upi_intent = banking_gateway.generate_dynamic_upi_qr(
+        order_number="ORD-TEST-9988",
+        amount_inr=50000.0,
+        payee_name="Krishi Saarthi Escrow"
+    )
+    assert upi_intent.startswith("upi://pay?")
+    assert "am=50000.00" in upi_intent
+    assert "cu=INR" in upi_intent
+
+
+# 22. DigiLocker & India AgriStack Kisan D-ID Gateway
+def test_digilocker_agristack_gateway():
+    from backend.app.services.digilocker_gateway import digilocker_gateway
+
+    # Test Consent URL generation
+    oauth_url = digilocker_gateway.generate_consent_url(
+        farmer_phone="+919814455210",
+        redirect_uri="https://krishisaarthi.in/oauth/callback"
+    )
+    assert "https://digilocker.meripehchaan.gov.in/public/oauth2/1/authorize" in oauth_url
+    assert "response_type=code" in oauth_url
+    assert "scope=Aadhaar+LandRecord+PMKisan" in oauth_url
+
+    # Test Kisan D-ID Profile Fetch
+    kisan_profile = digilocker_gateway.fetch_agristack_farmer_profile(
+        auth_code="digilocker_auth_code_mock_001",
+        farmer_name="Sardar Balwinder Singh Dhillon",
+        aadhaar_hash="XXXX-XXXX-3891"
+    )
+    assert kisan_profile.kisan_did.startswith("IN-PB-LDH-")
+    assert kisan_profile.digital_signature_valid is True
+    assert kisan_profile.land_record_ror["state"] == "Punjab"
+    assert kisan_profile.land_record_ror["total_area_hectares"] == 8.4
+
+
+
+
+# 23. Agmarknet APMC Live Price Service & e-NAM Clearinghouse
+def test_agmarknet_service_and_enam_gatepass():
+    from backend.app.services.agmarknet_service import agmarknet_service
+
+    rates = agmarknet_service.get_live_mandi_rates(state="Punjab")
+    assert isinstance(rates, list)
+    assert len(rates) > 0
+    first_rate = rates[0]
+    assert "commodity" in first_rate
+    assert "modal_price_per_quintal" in first_rate
+    assert first_rate["modal_price_per_quintal"] > 0
+
+    # Test e-NAM Gatepass Status
+    gatepass = agmarknet_service.get_enam_gatepass_status(lot_id="LOT-KHANNA-2026-99")
+    assert gatepass["enam_portal_status"] == "AUTHENTICATED_AT_APMC_WEIGHBRIDGE"
+    assert "weighment_slips" in gatepass
+    assert gatepass["weighment_slips"]["moisture_content_pct"] <= 14.0
+
+
+# 24. IMD Agromet Advisory & Foliar Spore Pressure Index (FSPI)
+def test_live_weather_and_foliar_spore_index():
+    from backend.app.services.live_weather_service import live_weather_service
+
+    weather = live_weather_service.get_current_agromet_telemetry(
+        latitude=30.9010,
+        longitude=75.8573,
+        crop_type="Wheat"
+    )
+    assert "telemetry" in weather
+    assert "temperature_c" in weather["telemetry"]
+    assert "agromet_advisory" in weather
+    assert "spore_pressure_index_0_to_100" in weather["agromet_advisory"]
+    assert "advisory_pa" in weather["agromet_advisory"]
+    assert "irrigation_recommendation" in weather
+
+
+# 25. Copernicus Sentinel-2 L2A Satellite Pipeline
+def test_copernicus_sentinel_pipeline():
+    from backend.app.services.satellite_pipeline import copernicus_pipeline
+
+    result = copernicus_pipeline.process_field_envelope(
+        min_lon=75.80,
+        min_lat=30.85,
+        max_lon=75.92,
+        max_lat=30.95,
+        cluster_name="Ludhiana Agro Cluster"
+    )
+    assert result["cluster"] == "Ludhiana Agro Cluster"
+    assert "Sentinel-2" in result["satellite_mission"]
+    assert "spectral_indices" in result
+    assert "NDVI" in result["spectral_indices"]
+    assert "SAVI" in result["spectral_indices"]
+    assert "EVI" in result["spectral_indices"]
+    assert len(result["cells"]) == 36  # 6x6 grid
+
+
+
+
 
 

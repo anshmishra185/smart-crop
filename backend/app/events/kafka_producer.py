@@ -65,3 +65,4 @@ class EventPublisher:
 
 # Global singleton event publisher
 event_publisher = EventPublisher()
+

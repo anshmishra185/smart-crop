@@ -42,3 +42,4 @@ def dispatch_pending_outbox_events(db: Session, batch_size: int = 50) -> int:
     db.commit()
     logger.info(f"[Outbox] Successfully dispatched {dispatched_count} events to event backbone.")
     return dispatched_count
+
