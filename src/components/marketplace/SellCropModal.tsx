@@ -9,6 +9,7 @@ import {
   Coins,
 } from 'lucide-react'
 import type { CropListing } from '../../data/marketplaceCrops'
+import { useAuth } from '../../auth/useAuth'
 
 interface SellCropModalProps {
   onClose: () => void
@@ -40,6 +41,7 @@ const DISTRICTS = [
 ]
 
 export function SellCropModal({ onClose, onPublish }: SellCropModalProps) {
+  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
 
   // Form State
@@ -49,10 +51,10 @@ export function SellCropModal({ onClose, onPublish }: SellCropModalProps) {
   const [moisturePercentage, setMoisturePercentage] = useState(11.5)
   const [quantityQuintals, setQuantityQuintals] = useState(50)
   const [pricePerQuintal, setPricePerQuintal] = useState<number>(COMMODITY_PRESETS[0].defaultPrice)
-  const [farmerName, setFarmerName] = useState('')
-  const [farmerPhone, setFarmerPhone] = useState('')
+  const [farmerName, setFarmerName] = useState(user?.name || '')
+  const [farmerPhone, setFarmerPhone] = useState(user?.phone || '')
   const [village, setVillage] = useState('')
-  const [district, setDistrict] = useState('Ludhiana')
+  const [district, setDistrict] = useState(user?.district || 'Ludhiana')
   const [deliveryOption, setDeliveryOption] = useState<'Farm-Gate Direct Pickup' | 'Mandi Yard Delivery' | 'Interstate Heavy Logistics'>('Farm-Gate Direct Pickup')
   const [description, setDescription] = useState('')
 

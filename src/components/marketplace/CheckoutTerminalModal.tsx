@@ -9,6 +9,7 @@ import {
   ShoppingBag,
 } from 'lucide-react'
 import type { CropListing, ConfirmedOrder } from '../../data/marketplaceCrops'
+import { useAuth } from '../../auth/useAuth'
 
 interface CheckoutTerminalModalProps {
   listing: CropListing
@@ -26,9 +27,10 @@ const MANDI_WEIGHBRIDGES = [
 ]
 
 export function CheckoutTerminalModal({ listing, onClose, onSuccess }: CheckoutTerminalModalProps) {
+  const { user } = useAuth()
   const [quantity, setQuantity] = useState<number>(Math.min(25, listing.quantityQuintals))
-  const [buyerName, setBuyerName] = useState('')
-  const [buyerPhone, setBuyerPhone] = useState('')
+  const [buyerName, setBuyerName] = useState(user?.name || '')
+  const [buyerPhone, setBuyerPhone] = useState(user?.phone || '')
   const [buyerMandiYard, setBuyerMandiYard] = useState(MANDI_WEIGHBRIDGES[0])
   const [buyerAddress, setBuyerAddress] = useState('')
 
