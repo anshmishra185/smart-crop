@@ -1,6 +1,13 @@
 import { createContext } from 'react'
 import type { GoogleUser } from '../lib/googleAuth'
 
+export interface OtpRequestResult {
+  success: boolean
+  message: string
+  maskedIdentifier: string
+  devOtp?: string
+}
+
 export interface AuthContextValue {
   user: GoogleUser | null
   loading: boolean
@@ -9,6 +16,14 @@ export interface AuthContextValue {
   closeAuthModal: () => void
   signInWithGoogle: () => Promise<void>
   signInDemo: () => void
+  requestOtp: (
+    identifier: string,
+    channel: 'phone' | 'email',
+    purpose?: 'login' | 'signup',
+    fullName?: string,
+    role?: string
+  ) => Promise<OtpRequestResult>
+  verifyOtp: (identifier: string, otpCode: string) => Promise<boolean>
   signOut: () => Promise<string | null>
   isGoogleConfigured: boolean
 }

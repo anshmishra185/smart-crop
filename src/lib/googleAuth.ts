@@ -1,10 +1,15 @@
 export interface GoogleUser {
   id: string
-  email: string
+  email?: string
+  phone?: string
   name: string
   givenName?: string
   familyName?: string
   picture?: string
+  role?: string
+  state?: string
+  district?: string
+  authMethod?: 'google' | 'phone_otp' | 'email_otp' | 'demo'
 }
 
 export const GOOGLE_CLIENT_ID =
@@ -109,4 +114,3 @@ declare global {
     }
   }
 }
-

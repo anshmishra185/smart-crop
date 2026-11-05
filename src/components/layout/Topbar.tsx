@@ -16,10 +16,13 @@ import {
   ScanEye,
   CloudSun,
   FlaskConical,
-  Compass
+  Compass,
+  LogIn,
+  LogOut
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../auth/useAuth'
 import { useAppStore } from '../../store/useAppStore'
 import { mockWeatherService } from '../../services/mockWeatherService'
 import { supportedLanguages } from '../../lib/translations'
@@ -47,6 +50,8 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
     markNotificationAsRead,
     markAllNotificationsAsRead,
   } = useAppStore()
+
+  const { user, openAuthModal, signOut } = useAuth()
 
   const [notifOpen, setNotifOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
@@ -414,49 +419,85 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
           )}
         </div>
 
-        {/* Profile Dropdown */}
-        <div className="relative" ref={userRef}>
+        {/* Profile / Auth Button */}
+        {user ? (
+          <div className="relative" ref={userRef}>
+            <button
+              type="button"
+              onClick={() => setUserOpen((v) => !v)}
+              className="flex items-center gap-2 rounded-full border border-slate-200/90 py-1 pl-1 pr-2.5 transition hover:border-emerald-300 dark:border-agri-darkBorder dark:hover:border-emerald-500"
+            >
+              {user.picture ? (
+                <img
+                  src={user.picture}
+                  alt={user.name}
+                  className="h-7 w-7 rounded-full object-cover shadow-sm ring-1 ring-emerald-500/30"
+                />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-forest-800 to-emerald-500 text-xs font-bold text-white shadow-sm">
+                  {user.name.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <span className="hidden text-xs font-bold text-slate-700 dark:text-slate-200 sm:inline-block max-w-[120px] truncate">
+                {user.name}
+              </span>
+            </button>
+
+            {userOpen && (
+              <div className="animate-in fade-in slide-in-from-top-2 absolute right-0 top-full mt-2 w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-agri-darkBorder dark:bg-agri-darkSurface z-50">
+                <div className="border-b border-slate-100 p-3.5 dark:border-agri-darkBorder">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    {user.phone || user.email || 'Verified Kisaan'}
+                  </p>
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 capitalize">
+                      {user.role || 'Farmer'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      {user.district ? `${user.district}, ${user.state}` : 'Punjab'}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-1">
+                  <Link
+                    to="/settings"
+                    onClick={() => setUserOpen(false)}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-agri-darkCard"
+                  >
+                    <User className="h-4 w-4" /> Account Settings
+                  </Link>
+                  <Link
+                    to="/reports"
+                    onClick={() => setUserOpen(false)}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-agri-darkCard"
+                  >
+                    <Globe className="h-4 w-4" /> Farm Reports & Export
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserOpen(false)
+                      void signOut()
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" /> Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
           <button
             type="button"
-            onClick={() => setUserOpen((v) => !v)}
-            className="flex items-center gap-2 rounded-full border border-slate-200/90 py-1 pl-1 pr-2.5 transition hover:border-emerald-300 dark:border-agri-darkBorder dark:hover:border-emerald-500"
+            onClick={openAuthModal}
+            className="flex items-center gap-1.5 rounded-full bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm shadow-emerald-600/30 transition hover:bg-emerald-700 active:scale-95"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-forest-800 to-emerald-500 text-xs font-bold text-white shadow-sm">
-              AM
-            </div>
-            <span className="hidden text-xs font-bold text-slate-700 dark:text-slate-200 sm:inline-block">
-              Ansh Mishra
-            </span>
+            <LogIn className="h-3.5 w-3.5" />
+            <span>Sign In / OTP</span>
           </button>
-
-          {userOpen && (
-            <div className="animate-in fade-in slide-in-from-top-2 absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-agri-darkBorder dark:bg-agri-darkSurface">
-              <div className="border-b border-slate-100 p-3.5 dark:border-agri-darkBorder">
-                <p className="text-sm font-bold text-slate-900 dark:text-white">Ansh Mishra</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Chief Agronomist & Farm Admin</p>
-                <span className="mt-1.5 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                  Enterprise Tier
-                </span>
-              </div>
-              <div className="p-1">
-                <Link
-                  to="/settings"
-                  onClick={() => setUserOpen(false)}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-agri-darkCard"
-                >
-                  <User className="h-4 w-4" /> Account Settings
-                </Link>
-                <Link
-                  to="/reports"
-                  onClick={() => setUserOpen(false)}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-agri-darkCard"
-                >
-                  <Globe className="h-4 w-4" /> Farm Reports & Export
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Global Quick Jump Modal (Command Palette) */}
