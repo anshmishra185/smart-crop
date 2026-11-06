@@ -106,3 +106,4 @@ jobs:
           echo "Triggering ArgoCD Application Sync for clusters ap-south-1 (Mumbai) and ap-south-2 (Hyderabad)..."
           echo "GitOps commit SHA: ${{ github.sha }}"
           echo "Zero-Downtime Rolling Update & Pod Disruption Budget minAvailable: 2 guaranteed."
+

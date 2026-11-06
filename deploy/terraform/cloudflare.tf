@@ -80,3 +80,4 @@ resource "cloudflare_ruleset" "waf_owasp" {
     enabled     = true
   }
 }
+

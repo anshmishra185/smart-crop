@@ -47,3 +47,4 @@ resource "aws_msk_cluster" "primary_kafka" {
     }
   }
 }
+

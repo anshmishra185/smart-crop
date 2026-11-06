@@ -63,3 +63,4 @@ resource "aws_db_instance" "dr_replica_postgres" {
 
   performance_insights_enabled = true
 }
+

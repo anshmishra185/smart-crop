@@ -95,3 +95,4 @@ resource "aws_eks_node_group" "secondary_compute" {
 
   instance_types = var.eks_node_instance_types
 }
+

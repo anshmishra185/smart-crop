@@ -27,3 +27,4 @@ resource "aws_elasticache_replication_group" "redis_cluster" {
   snapshot_retention_limit = 7
   snapshot_window          = "18:00-19:00"
 }
+

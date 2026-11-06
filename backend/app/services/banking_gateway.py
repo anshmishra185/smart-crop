@@ -117,3 +117,4 @@ class BankingGatewayClient:
 
 # Global singleton
 banking_gateway = BankingGatewayClient()
+

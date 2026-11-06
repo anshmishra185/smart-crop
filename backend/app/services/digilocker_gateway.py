@@ -81,3 +81,4 @@ class DigiLockerGatewayClient:
 
 # Global singleton
 digilocker_gateway = DigiLockerGatewayClient()
+

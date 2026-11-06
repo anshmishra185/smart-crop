@@ -52,3 +52,4 @@ variable "redis_node_type" {
   type        = string
   default     = "cache.m6g.large"
 }
+
