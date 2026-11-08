@@ -15,7 +15,9 @@ export interface AuthContextValue {
   openAuthModal: () => void
   closeAuthModal: () => void
   signInWithGoogle: () => Promise<void>
+  signInGoogleQuick?: (email?: string, name?: string) => void
   signInDemo: () => void
+
   requestOtp: (
     identifier: string,
     channel: 'phone' | 'email',

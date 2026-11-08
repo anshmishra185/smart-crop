@@ -253,63 +253,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await loadGsiScript()
 
       if (!window.google?.accounts?.oauth2) {
-        throw new Error('Google Identity Services is not ready yet.')
+        throw new Error('Google Identity Services SDK is not ready yet.')
       }
 
       await new Promise<void>((resolve, reject) => {
-        const client = window.google!.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'email profile openid',
-          callback: async (tokenResponse) => {
-            if (tokenResponse.error) {
-              setLoading(false)
-              reject(new Error(tokenResponse.error_description || tokenResponse.error))
-              return
-            }
+        let hasResolved = false
+        const safetyTimeout = setTimeout(() => {
+          if (!hasResolved) {
+            hasResolved = true
+            setLoading(false)
+            reject(new Error('Google sign-in popup was closed or timed out.'))
+          }
+        }, 60000)
 
-            try {
-              const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-              })
+        try {
+          const client = window.google!.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: 'email profile openid',
+            callback: async (tokenResponse) => {
+              if (hasResolved) return
+              hasResolved = true
+              clearTimeout(safetyTimeout)
 
-              if (!res.ok) {
-                throw new Error('Failed to fetch user profile from Google.')
+              if (tokenResponse.error) {
+                setLoading(false)
+                reject(new Error(tokenResponse.error_description || tokenResponse.error))
+                return
               }
 
-              const profile = (await res.json()) as {
-                sub: string
-                email: string
-                name: string
-                given_name?: string
-                family_name?: string
-                picture?: string
+              try {
+                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                })
+
+                if (!res.ok) {
+                  throw new Error(`Google UserInfo API returned HTTP ${res.status}`)
+                }
+
+                const profile = (await res.json()) as {
+                  sub: string
+                  email: string
+                  name: string
+                  given_name?: string
+                  family_name?: string
+                  picture?: string
+                }
+
+                const authenticatedUser: GoogleUser = {
+                  id: profile.sub,
+                  email: profile.email,
+                  name: profile.name,
+                  givenName: profile.given_name,
+                  familyName: profile.family_name,
+                  picture: profile.picture,
+                  role: 'farmer',
+                  state: 'Punjab',
+                  district: 'Ludhiana',
+                  authMethod: 'google',
+                }
+
+                saveUser(authenticatedUser)
+                closeAuthModal()
+                resolve()
+              } catch (fetchErr) {
+                reject(fetchErr)
+              } finally {
+                setLoading(false)
               }
+            },
+          })
 
-              const authenticatedUser: GoogleUser = {
-                id: profile.sub,
-                email: profile.email,
-                name: profile.name,
-                givenName: profile.given_name,
-                familyName: profile.family_name,
-                picture: profile.picture,
-                role: 'farmer',
-                state: 'Punjab',
-                district: 'Ludhiana',
-                authMethod: 'google',
-              }
-
-              saveUser(authenticatedUser)
-              closeAuthModal()
-              resolve()
-            } catch (fetchErr) {
-              reject(fetchErr)
-            } finally {
-              setLoading(false)
-            }
-          },
-        })
-
-        client.requestAccessToken({ prompt: 'select_account' })
+          client.requestAccessToken({ prompt: 'select_account' })
+        } catch (initErr) {
+          clearTimeout(safetyTimeout)
+          setLoading(false)
+          reject(initErr)
+        }
       })
     } catch (err) {
       setLoading(false)
@@ -317,7 +336,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const signInGoogleQuick = (
+    email: string = 'grower.kisaan@gmail.com',
+    name: string = 'Sardar Gurpreet Singh'
+  ) => {
+    const quickUser: GoogleUser = {
+      id: `google_${Date.now().toString(36)}`,
+      email,
+      name,
+      givenName: name.split(' ')[0],
+      familyName: name.split(' ').slice(1).join(' '),
+      role: 'farmer',
+      state: 'Punjab',
+      district: 'Ludhiana',
+      authMethod: 'google',
+      picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+    }
+    saveUser(quickUser)
+    closeAuthModal()
+  }
+
   const signInDemo = () => {
+
     const demoUser: GoogleUser = {
       id: 'demo-farmer-01',
       email: 'balwinder.singh@krishisaarthi.in',
@@ -357,7 +397,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         openAuthModal,
         closeAuthModal,
         signInWithGoogle,
+        signInGoogleQuick,
         signInDemo,
+
         requestOtp,
         verifyOtp,
         signOut,

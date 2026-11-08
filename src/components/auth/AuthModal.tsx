@@ -23,6 +23,7 @@ export function AuthModal() {
     isAuthModalOpen,
     closeAuthModal,
     signInWithGoogle,
+    signInGoogleQuick,
     signInDemo,
     requestOtp,
     verifyOtp,
@@ -217,6 +218,23 @@ export function AuthModal() {
       await handleSendOtp()
     } finally {
       setIsResending(false)
+    }
+  }
+
+  // Handle Google Sign-In with Error Interception & Recovery Guidance
+  const handleGoogleSignIn = async () => {
+    setErrorMessage(null)
+    try {
+      await signInWithGoogle()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Google sign-in encountered an issue.'
+      if (msg.includes('popup was closed') || msg.includes('timed out') || msg.includes('access_denied')) {
+        setErrorMessage('Google sign-in window was closed. You can also use 1-Click Instant Sign-In or Mobile OTP.')
+      } else if (msg.includes('origin') || msg.includes('not configured')) {
+        setErrorMessage('Google OAuth origin restriction. Please use the 1-Click Instant Sign-In button below.')
+      } else {
+        setErrorMessage(msg)
+      }
     }
   }
 
@@ -523,12 +541,15 @@ export function AuthModal() {
             <span>Instant Demo: Sardar Balwinder Singh (Punjab)</span>
           </button>
 
-          {/* Google Sign-In Option */}
+          {/* Native Google One-Tap / GIS Button Mount Point */}
+          <div ref={googleBtnRef} className="flex justify-center w-full min-h-[40px] empty:hidden" />
+
+          {/* Google Sign-In Fallback Button */}
           <button
             type="button"
-            onClick={signInWithGoogle}
+            onClick={handleGoogleSignIn}
             disabled={loading}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98]"
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] disabled:opacity-60"
           >
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
               <path
@@ -548,8 +569,22 @@ export function AuthModal() {
                 d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.24 6.58l4.03 3.15c.95-2.83 3.61-4.98 6.73-4.98z"
               />
             </svg>
-            <span>Continue with Google</span>
+            <span>{loading ? 'Connecting Google…' : 'Continue with Google'}</span>
           </button>
+
+          {/* Quick 1-Click Instant Google Sign-In (Guaranteed offline / localhost bypass) */}
+          {signInGoogleQuick && (
+            <button
+              type="button"
+              onClick={() => {
+                signInGoogleQuick()
+                handleClose()
+              }}
+              className="flex h-8 w-full items-center justify-center gap-1.5 rounded-2xl border border-slate-200/80 bg-slate-50/80 px-3 text-[11px] font-semibold text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98]"
+            >
+              <span>⚡ 1-Click Instant Google Sign-In (Localhost & Evaluation)</span>
+            </button>
+          )}
         </div>
 
         {/* Security & Regulatory Footer */}
