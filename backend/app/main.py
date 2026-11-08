@@ -118,14 +118,15 @@ app = FastAPI(
 app.add_middleware(CorrelationIdAndTelemetryMiddleware)
 app.add_middleware(SlidingWindowRateLimiter, max_requests=100, window_seconds=60)
 
-# Enable CORS for Web & Mobile Clients
+# Enable CORS for Web & Mobile Clients (Vercel, Localhost, Mobile, Cloudflare)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Register Subsystem Routers
 app.include_router(disease.router)
