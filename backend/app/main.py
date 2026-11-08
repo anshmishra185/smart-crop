@@ -217,6 +217,15 @@ def health_check():
         }
     }
 
+# Mount React 19 Frontend SPA (Unified Single-URL Full-Stack Service)
+from fastapi.staticfiles import StaticFiles
+
+for static_dir in ["dist", "static"]:
+    if os.path.exists(static_dir) and os.path.isdir(static_dir):
+        app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+        break
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.app.main:app", host="0.0.0.0", port=8000, reload=True)
+
